@@ -7,6 +7,7 @@ import type { GitHubRelease } from './types';
 const GITHUB_OWNER = 'PocketMidi';
 const GITHUB_REPO = 'KB1';
 const RELEASES_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
+const ASSETS_API  = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/assets`;
 
 /**
  * Fetch latest releases from GitHub
@@ -28,19 +29,21 @@ export async function fetchReleases(limit = 5): Promise<GitHubRelease[]> {
 }
 
 /**
- * Download firmware binary from URL
+ * Download firmware binary via the GitHub API assets endpoint.
+ * This avoids the CORS issue with the direct release download URL,
+ * which redirects through github.com (no CORS header) before landing
+ * on objects.githubusercontent.com.
  */
 export async function downloadFirmware(
-    url: string,
+    assetId: number,
     onProgress?: (loaded: number, total: number) => void
 ): Promise<ArrayBuffer> {
+    const url = `${ASSETS_API}/${assetId}`;
     try {
-        console.log('Downloading firmware from:', url);
+        console.log('Downloading firmware via API asset:', url);
 
         const response = await fetch(url, {
             method: 'GET',
-            mode: 'cors',
-            redirect: 'follow',
             headers: {
                 'Accept': 'application/octet-stream',
             }
@@ -92,22 +95,16 @@ export async function downloadFirmware(
 }
 
 /**
- * Find firmware .bin file in release assets
+ * Find firmware .bin asset in a release and return its id.
  */
-export function findFirmwareBinary(release: GitHubRelease): string | null {
-    // Look for .bin file in assets
+export function findFirmwareBinary(release: GitHubRelease): number | null {
     const binAsset = release.assets.find(asset =>
         asset.name.endsWith('.bin') && !asset.name.includes('bootloader')
     );
+    if (binAsset) return binAsset.id;
 
-    if (binAsset) {
-        return binAsset.browser_download_url;
-    }
-
-    // Look for combined firmware
     const combinedAsset = release.assets.find(asset =>
         asset.name.includes('combined') || asset.name.includes('full')
     );
-
-    return combinedAsset?.browser_download_url || null;
+    return combinedAsset?.id ?? null;
 }

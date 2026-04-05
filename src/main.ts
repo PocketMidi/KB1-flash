@@ -504,7 +504,6 @@ async function loadGitHubReleases(): Promise<void> {
             const item = document.createElement('div');
             item.className = 'release-list-item';
             item.dataset.index = index.toString();
-            item.dataset.url = firmwareUrl;
             item.dataset.version = release.tag_name || release.name;
 
             item.innerHTML = `
@@ -561,9 +560,9 @@ function selectRelease(element: HTMLElement, index: number, releases: any[]): vo
  */
 async function loadGitHubFirmware(release: GitHubRelease): Promise<void> {
     try {
-        const firmwareUrl = findFirmwareBinary(release);
+        const assetId = findFirmwareBinary(release);
 
-        if (!firmwareUrl) {
+        if (!assetId) {
             throw new Error('No firmware binary found in release');
         }
 
@@ -572,7 +571,7 @@ async function loadGitHubFirmware(release: GitHubRelease): Promise<void> {
         // Update UI to show downloading
         fileName.textContent = `Downloading ${release.name || release.tag_name}...`;
 
-        const arrayBuffer = await downloadFirmware(firmwareUrl);
+        const arrayBuffer = await downloadFirmware(assetId);
 
         currentFirmware = {
             name: release.name || release.tag_name,
@@ -589,7 +588,7 @@ async function loadGitHubFirmware(release: GitHubRelease): Promise<void> {
         console.error('Failed to download firmware:', error);
         fileName.textContent = 'Drop .bin file or click to browse';
         const message = error instanceof Error ? error.message : 'Failed to download firmware from GitHub';
-        showError(message);
+        showToast(message, 'error');
     }
 }
 
@@ -750,6 +749,21 @@ function showComplete(): void {
 function showError(message: string): void {
     flashError.classList.remove('hidden');
     errorMessage.textContent = message;
+    showToast(message, 'error');
+}
+
+/**
+ * Show a toast notification
+ */
+function showToast(message: string, type: 'error' | 'success' | 'info' = 'info'): void {
+    const toast = document.getElementById('toast')!;
+    const toastMsg = document.getElementById('toast-message')!;
+    toastMsg.textContent = message;
+    toast.className = `toast toast-${type} visible`;
+    clearTimeout((toast as any)._hideTimer);
+    (toast as any)._hideTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+    }, 5000);
 }
 
 /**

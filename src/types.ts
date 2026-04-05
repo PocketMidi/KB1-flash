@@ -26,6 +26,7 @@ export interface GitHubRelease {
 }
 
 export interface GitHubAsset {
+  id: number;
   name: string;
   browser_download_url: string;
   size: number;
