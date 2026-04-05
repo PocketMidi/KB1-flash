@@ -1197,9 +1197,9 @@ body {
 /* Toast notification */
 .toast {
     position: fixed;
-    top: 20px;
+    top: 24px;
     left: 50%;
-    transform: translateX(-50%) translateY(-120%);
+    transform: translateX(-50%);
     min-width: 280px;
     max-width: 480px;
     padding: 12px 16px;
@@ -1210,14 +1210,17 @@ body {
     font-size: 0.9rem;
     z-index: 2000;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    transition: transform 0.3s ease;
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     color: var(--text-primary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
 }
 
 .toast.visible {
-    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .toast-error {
