@@ -1,0 +1,30 @@
+{
+  "name": "kb1-flash",
+  "version": "1.0.0",
+  "description": "KB1 Firmware Flash Tool - Desktop USB firmware updater with NVS preservation",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "esptool-js": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11"
+  },
+  "keywords": [
+    "kb1",
+    "firmware",
+    "esp32",
+    "flash",
+    "usb",
+    "serial"
+  ],
+  "author": "Pocket MIDI",
+  "license": "MIT"
+}
