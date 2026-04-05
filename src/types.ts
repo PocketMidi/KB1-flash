@@ -18,18 +18,12 @@ export interface FlashStatus {
   error?: string;
 }
 
-export interface GitHubRelease {
-  name: string;
-  tag_name: string;
-  published_at: string;
-  assets: GitHubAsset[];
-}
-
-export interface GitHubAsset {
-  id: number;
-  name: string;
-  browser_download_url: string;
-  size: number;
+export interface FirmwareRelease {
+  version: string;    // e.g. "v1.5.0"
+  name: string;       // e.g. "Version 1.5.0"
+  date: string;       // e.g. "2026-03-31"
+  filename: string;   // e.g. "KB1-firmware-v1.5.0.bin"
+  size: number;       // bytes
 }
 
 export interface FirmwareFile {

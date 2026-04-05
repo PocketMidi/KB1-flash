@@ -1,26 +1,27 @@
 /**
- * KB1 Flash Tool - GitHub Releases Fetcher
+ * KB1 Flash Tool - Firmware Release Fetcher
+ *
+ * Firmware binaries and the release manifest are served as static files
+ * from the same origin (public/firmware/), so there are no CORS issues.
  */
 
-import type { GitHubRelease } from './types';
+import type { FirmwareRelease } from './types';
 
-const GITHUB_OWNER = 'PocketMidi';
-const GITHUB_REPO = 'KB1';
-const RELEASES_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
-const ASSETS_API  = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/assets`;
+// Vite's BASE_URL is '/KB1-flash/' in production, '/' in dev.
+const FIRMWARE_BASE = import.meta.env.BASE_URL.replace(/\/$/, '') + '/firmware/';
 
 /**
- * Fetch latest releases from GitHub
+ * Fetch the firmware release list from the local manifest.
  */
-export async function fetchReleases(limit = 5): Promise<GitHubRelease[]> {
+export async function fetchReleases(): Promise<FirmwareRelease[]> {
     try {
-        const response = await fetch(`${RELEASES_API}?per_page=${limit}`);
+        const response = await fetch(FIRMWARE_BASE + 'releases.json');
 
         if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.statusText}`);
+            throw new Error(`Failed to load release manifest: ${response.statusText}`);
         }
 
-        const releases: GitHubRelease[] = await response.json();
+        const releases: FirmwareRelease[] = await response.json();
         return releases;
     } catch (error) {
         console.error('Failed to fetch releases:', error);
@@ -29,25 +30,17 @@ export async function fetchReleases(limit = 5): Promise<GitHubRelease[]> {
 }
 
 /**
- * Download firmware binary via the GitHub API assets endpoint.
- * This avoids the CORS issue with the direct release download URL,
- * which redirects through github.com (no CORS header) before landing
- * on objects.githubusercontent.com.
+ * Download firmware binary from the same-origin firmware directory.
  */
 export async function downloadFirmware(
-    assetId: number,
+    filename: string,
     onProgress?: (loaded: number, total: number) => void
 ): Promise<ArrayBuffer> {
-    const url = `${ASSETS_API}/${assetId}`;
+    const url = FIRMWARE_BASE + filename;
     try {
-        console.log('Downloading firmware via API asset:', url);
+        console.log('Downloading firmware:', url);
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/octet-stream',
-            }
-        });
+        const response = await fetch(url, { method: 'GET' });
 
         if (!response.ok) {
             throw new Error(`Download failed: ${response.status} ${response.statusText}`);
@@ -94,17 +87,4 @@ export async function downloadFirmware(
     }
 }
 
-/**
- * Find firmware .bin asset in a release and return its id.
- */
-export function findFirmwareBinary(release: GitHubRelease): number | null {
-    const binAsset = release.assets.find(asset =>
-        asset.name.endsWith('.bin') && !asset.name.includes('bootloader')
-    );
-    if (binAsset) return binAsset.id;
 
-    const combinedAsset = release.assets.find(asset =>
-        asset.name.includes('combined') || asset.name.includes('full')
-    );
-    return combinedAsset?.id ?? null;
-}

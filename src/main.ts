@@ -4,10 +4,10 @@
  */
 
 import { KB1Flasher } from './flasher';
-import { downloadFirmware, fetchReleases, findFirmwareBinary } from './github';
+import { downloadFirmware, fetchReleases } from './github';
 import { SerialMonitor } from './serial-monitor';
 import './style.css';
-import type { FirmwareFile, FlashStatus, GitHubRelease } from './types';
+import type { FirmwareFile, FlashStatus, FirmwareRelease } from './types';
 
 // Initialize
 let flasher: KB1Flasher | null = null;
@@ -478,7 +478,7 @@ async function loadGitHubReleases(): Promise<void> {
         releasesList.style.display = 'none';
         flashGitHubBtn.style.display = 'none';
 
-        const releases = await fetchReleases(10);
+        const releases = await fetchReleases();
         console.log(`Fetched ${releases.length} releases`);
 
         if (releases.length === 0) {
@@ -487,24 +487,21 @@ async function loadGitHubReleases(): Promise<void> {
         }
 
         // Update version display with latest release
-        latestVersion = releases[0].tag_name || releases[0].name || latestVersion;
+        latestVersion = releases[0].version;
         versionDisplay.textContent = latestVersion;
 
         // Create list items
         releasesList.innerHTML = '';
 
         releases.forEach((release, index) => {
-            const firmwareUrl = findFirmwareBinary(release);
-            if (!firmwareUrl) return; // Skip releases without firmware binary
-
-            const date = new Date(release.published_at).toLocaleDateString();
-            const version = release.name || release.tag_name;
+            const date = new Date(release.date).toLocaleDateString();
+            const version = release.name;
             const isLatest = index === 0;
 
             const item = document.createElement('div');
             item.className = 'release-list-item';
             item.dataset.index = index.toString();
-            item.dataset.version = release.tag_name || release.name;
+            item.dataset.version = release.version;
 
             item.innerHTML = `
                 <div class="release-version">
@@ -558,29 +555,31 @@ function selectRelease(element: HTMLElement, index: number, releases: any[]): vo
 /**
  * Load firmware from GitHub release
  */
-async function loadGitHubFirmware(release: GitHubRelease): Promise<void> {
+async function loadGitHubFirmware(release: FirmwareRelease): Promise<void> {
     try {
-        const assetId = findFirmwareBinary(release);
-
-        if (!assetId) {
-            throw new Error('No firmware binary found in release');
-        }
-
         console.log(`Downloading firmware: ${release.name}...`);
 
         // Update UI to show downloading
-        fileName.textContent = `Downloading ${release.name || release.tag_name}...`;
+        fileName.textContent = `Downloading ${release.name}...`;
 
-        const arrayBuffer = await downloadFirmware(assetId);
+        const arrayBuffer = await downloadFirmware(
+            release.filename,
+            (loaded, total) => {
+                if (total > 0) {
+                    const pct = Math.round((loaded / total) * 100);
+                    fileName.textContent = `Downloading ${release.name}... ${pct}%`;
+                }
+            }
+        );
 
         currentFirmware = {
-            name: release.name || release.tag_name,
+            name: release.name,
             data: arrayBuffer,
             source: 'github',
         };
 
         console.log(`Downloaded firmware: ${arrayBuffer.byteLength} bytes`);
-        fileName.textContent = `${release.name || release.tag_name} (${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB) - Ready to flash`;
+        fileName.textContent = `${release.name} (${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB) - Ready to flash`;
 
         // Start flashing
         await startFlash();
