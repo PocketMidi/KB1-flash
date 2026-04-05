@@ -1,8 +1,8 @@
 # Dependencies
 node_modules
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
+# Keep package-lock.json for GitHub Actions
 
 # Build output
 dist
