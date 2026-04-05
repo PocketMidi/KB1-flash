@@ -107,5 +107,5 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/firmware/
-          git commit -m "chore: add firmware ${{ steps.tag.outputs.tag }} [skip ci]"
+          git commit -m "chore: add firmware ${{ steps.tag.outputs.tag }}"
           git push
