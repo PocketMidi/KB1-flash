@@ -4,9 +4,9 @@
 
 ### Option A: Via GitHub Website (Easiest)
 
-1. **Go to GitHub:** https://github.com/new
+1. **Go to GitHub:** https://github.com/organizations/PocketMidi/repositories/new
 2. **Fill in details:**
-   - Repository name: `kb1-flash`
+   - Repository name: `KB1-flash`
    - Description: `KB1 Desktop Firmware Flash Tool - USB updater with NVS preservation`
    - Visibility: **Public** (so GitHub Pages works free)
    - **DO NOT** initialize with README, .gitignore, or license (we already have these)
@@ -15,7 +15,7 @@
 ### Option B: Via GitHub CLI (if you have `gh` installed)
 
 ```bash
-gh repo create pocket-midi/kb1-flash --public --description "KB1 Desktop Firmware Flash Tool"
+gh repo create PocketMidi/KB1-flash --public --description "KB1 Desktop Firmware Flash Tool"
 ```
 
 ---
@@ -45,15 +45,13 @@ git commit -m "Initial commit - KB1 Flash Tool v1.0.0"
 After creating the repo on GitHub, you'll see instructions. Use these:
 
 ```bash
-# Add GitHub as remote (replace with your actual repo URL)
-git remote add origin https://github.com/pocket-midi/kb1-flash.git
+# Add GitHub as remote
+git remote add origin https://github.com/PocketMidi/KB1-flash.git
 
 # Push to GitHub
 git branch -M main
 git push -u origin main
 ```
-
-**Important:** Replace `pocket-midi` with your actual GitHub username/org if different!
 
 ---
 
@@ -130,7 +128,7 @@ mkdir -p .github/workflows
 
 ## Step 5: Enable GitHub Pages in Repository Settings
 
-1. Go to your repo on GitHub: `https://github.com/pocket-midi/kb1-flash`
+1. Go to your repo on GitHub: `https://github.com/PocketMidi/KB1-flash`
 2. Click **Settings** tab
 3. Click **Pages** in left sidebar
 4. Under "Source":
@@ -149,7 +147,7 @@ Edit `vite.config.ts`:
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/kb1-flash/', // Add this line - must match repo name
+  base: '/KB1-flash/', // Add this line - must match repo name
   build: {
     outDir: 'dist',
     sourcemap: true,
@@ -182,16 +180,16 @@ git push
 **GitHub Actions will automatically:**
 1. Build your project
 2. Deploy to GitHub Pages
-3. Your site will be live at: `https://pocket-midi.github.io/kb1-flash/`
+3. Your site will be live at: `https://PocketMidi.github.io/KB1-flash/`
 
 ---
 
 ## Step 8: Verify Deployment
 
-1. Go to your repo: `https://github.com/pocket-midi/kb1-flash`
+1. Go to your repo: `https://github.com/PocketMidi/KB1-flash`
 2. Click **Actions** tab
 3. Watch the deployment workflow run (takes ~1-2 minutes)
-4. When complete, visit: `https://pocket-midi.github.io/kb1-flash/`
+4. When complete, visit: `https://PocketMidi.github.io/KB1-flash/`
 
 ---
 
@@ -271,9 +269,9 @@ GitHub Actions will automatically rebuild and redeploy!
 ## Quick Reference
 
 **Local dev:** `npm run dev` → http://localhost:5174  
-**Production URL:** https://pocket-midi.github.io/kb1-flash/  
+**Production URL:** https://PocketMidi.github.io/KB1-flash/  
 **Custom domain:** https://kb1-flash.pocketmidi.com (if configured)  
 
-**Repo URL:** https://github.com/pocket-midi/kb1-flash  
-**Settings:** https://github.com/pocket-midi/kb1-flash/settings/pages  
-**Actions:** https://github.com/pocket-midi/kb1-flash/actions
+**Repo URL:** https://github.com/PocketMidi/KB1-flash  
+**Settings:** https://github.com/PocketMidi/KB1-flash/settings/pages  
+**Actions:** https://github.com/PocketMidi/KB1-flash/actions

@@ -1,8 +1,13 @@
 #!/bin/bash
 # KB1 Flash Tool - GitHub Repository Setup Script
+# Repository: https://github.com/PocketMidi/KB1-flash
+
+REPO_URL="https://github.com/PocketMidi/KB1-flash.git"
+GITHUB_USER="PocketMidi"
 
 echo "🚀 KB1 Flash Tool - GitHub Setup"
 echo "================================"
+echo "Repository: $REPO_URL"
 echo ""
 
 # Check if git is initialized
@@ -25,70 +30,106 @@ if [ -z "$(git log 2>/dev/null)" ]; then
     echo ""
 else
     echo "✅ Repository already has commits"
+    
+    # Check if there are uncommitted changes
+    if ! git diff-index --quiet HEAD --; then
+        echo "⚠️  You have uncommitted changes"
+        read -p "Commit changes now? (y/n): " COMMIT_NOW
+        if [ "$COMMIT_NOW" = "y" ]; then
+            git add .
+            read -p "Commit message (or press Enter for 'Update KB1 Flash Tool'): " COMMIT_MSG
+            COMMIT_MSG=${COMMIT_MSG:-"Update KB1 Flash Tool"}
+            git commit -m "$COMMIT_MSG"
+            echo "✅ Changes committed"
+        fi
+    fi
     echo ""
 fi
 
-# Ask for GitHub username/org
+# Ask for confirmation before pushing
 echo "📝 Step 3: Connect to GitHub"
 echo ""
-echo "First, create a new repository on GitHub:"
-echo "   👉 https://github.com/new"
+echo "Make sure you've created the repository on GitHub:"
+echo "   👉 https://github.com/PocketMidi/KB1-flash"
 echo ""
-echo "Repository settings:"
-echo "   - Name: kb1-flash"
-echo "   - Visibility: Public"
-echo "   - DO NOT initialize with README/license (we have those)"
+echo "If not created yet:"
+echo "   1. Go to: https://github.com/new"
+echo "   2. Name: KB1-flash"
+echo "   3. Owner: PocketMidi"
+echo "   4. Visibility: Public"
+echo "   5. DO NOT initialize with README/license"
+echo "   6. Click 'Create repository'"
 echo ""
-read -p "Press Enter after you've created the GitHub repository..."
+read -p "Repository created on GitHub? Press Enter to continue..."
 echo ""
 
-# Ask for GitHub username
-read -p "Enter your GitHub username or organization (e.g., 'pocket-midi'): " GITHUB_USER
-
-if [ -z "$GITHUB_USER" ]; then
-    echo "❌ Username required!"
-    exit 1
-fi
-
-REPO_URL="https://github.com/$GITHUB_USER/kb1-flash.git"
-
-echo ""
 echo "📝 Step 4: Adding remote and pushing to GitHub..."
-echo "   Repository: $REPO_URL"
 echo ""
 
 # Check if remote already exists
 if git remote | grep -q "origin"; then
-    echo "⚠️  Remote 'origin' already exists. Updating..."
-    git remote set-url origin "$REPO_URL"
+    CURRENT_URL=$(git remote get-url origin)
+    if [ "$CURRENT_URL" != "$REPO_URL" ]; then
+        echo "⚠️  Remote 'origin' exists with different URL: $CURRENT_URL"
+        echo "   Updating to: $REPO_URL"
+        git remote set-url origin "$REPO_URL"
+    else
+        echo "✅ Remote 'origin' already set correctly"
+    fi
 else
+    echo "Adding remote 'origin'..."
     git remote add origin "$REPO_URL"
 fi
 
-# Push to GitHub
+# Set main branch
 git branch -M main
 
+# Push to GitHub
+echo ""
 echo "Pushing to GitHub..."
 if git push -u origin main; then
-    echo "✅ Code pushed to GitHub!"
+    echo ""
+    echo "✅ Code pushed to GitHub successfully!"
     echo ""
 else
-    echo "❌ Push failed. You may need to:"
-    echo "   1. Check your GitHub credentials"
-    echo "   2. Make sure the repository exists"
-    echo "   3. Try: git push -u origin main --force (if needed)"
-    exit 1
+    echo ""
+    echo "⚠️  Push failed. This might be because:"
+    echo "   1. Repository doesn't exist on GitHub yet"
+    echo "   2. You need to authenticate (check credentials)"
+    echo "   3. Branch protection rules are enabled"
+    echo ""
+    read -p "Try force push? (y/n): " FORCE_PUSH
+    if [ "$FORCE_PUSH" = "y" ]; then
+        git push -u origin main --force
+    else
+        echo "Manual push: git push -u origin main"
+        exit 1
+    fi
 fi
 
 echo "🎉 Setup Complete!"
 echo ""
-echo "Next steps:"
-echo "1. Go to: https://github.com/$GITHUB_USER/kb1-flash/settings/pages"
-echo "2. Under 'Source', select: GitHub Actions"
-echo "3. Click Save"
-echo "4. Check deployment: https://github.com/$GITHUB_USER/kb1-flash/actions"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Next Steps:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "Your site will be live at:"
-echo "   🌐 https://$GITHUB_USER.github.io/kb1-flash/"
+echo "1️⃣  Enable GitHub Pages:"
+echo "   https://github.com/PocketMidi/KB1-flash/settings/pages"
 echo ""
-echo "📖 See GITHUB_SETUP.md for more details!"
+echo "   Under 'Build and deployment':"
+echo "   - Source: Select 'GitHub Actions'"
+echo "   - This auto-saves, no Save button needed"
+echo ""
+echo "2️⃣  Watch deployment:"
+echo "   https://github.com/PocketMidi/KB1-flash/actions"
+echo ""
+echo "   Wait ~1-2 minutes for green checkmark ✓"
+echo ""
+echo "3️⃣  Visit your live site:"
+echo "   🌐 https://PocketMidi.github.io/KB1-flash/"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "📖 See GITHUB_SETUP.md for custom domain setup"
+echo "📖 See DEPLOY.md for manual deployment steps"
+echo ""

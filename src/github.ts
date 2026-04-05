@@ -4,7 +4,7 @@
 
 import type { GitHubRelease } from './types';
 
-const GITHUB_OWNER = 'pocket-midi';
+const GITHUB_OWNER = 'PocketMidi';
 const GITHUB_REPO = 'KB1-firmware';
 const RELEASES_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
 

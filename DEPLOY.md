@@ -16,13 +16,14 @@ cd /Volumes/Oyen2TB/xGIT_KB1/KB1/kb1-flash
 The script will guide you through everything! 
 
 **Before running the script:**
-1. Go to https://github.com/new
-2. Name: `kb1-flash`
-3. Make it **Public**
-4. **Don't** check any boxes (README, .gitignore, license)
-5. Click "Create repository"
+1. Make sure the repo exists: https://github.com/PocketMidi/KB1-flash
+2. If not, go to https://github.com/organizations/PocketMidi/repositories/new
+3. Name: `KB1-flash`
+4. Make it **Public**
+5. **Don't** check any boxes (README, .gitignore, license)
+6. Click "Create repository"
 
-Then run the script above and follow the prompts!
+Then run the script and it will push to your PocketMidi repo!
 
 ---
 
@@ -32,7 +33,7 @@ Then run the script above and follow the prompts!
 
 1. Open https://github.com/new
 2. Fill in:
-   - Repository name: **kb1-flash**
+   - Repository name: **KB1-flash**
    - Description: **KB1 Desktop Firmware Flash Tool**
    - Visibility: **Public**
    - **DO NOT** check: Add README, .gitignore, or license
@@ -56,22 +57,17 @@ git commit -m "Initial commit - KB1 Flash Tool v1.0.0"
 
 ### Step 4: Connect to GitHub
 
-Replace `YOUR_USERNAME` with your actual GitHub username:
+For the PocketMidi organization:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/kb1-flash.git
+git remote add origin https://github.com/PocketMidi/KB1-flash.git
 git branch -M main
 git push -u origin main
 ```
 
-**Example:** If your username is `pocket-midi`:
-```bash
-git remote add origin https://github.com/pocket-midi/kb1-flash.git
-```
-
 ### Step 5: Enable GitHub Pages
 
-1. Go to your repo: `https://github.com/YOUR_USERNAME/kb1-flash`
+1. Go to your repo: `https://github.com/PocketMidi/KB1-flash`
 2. Click **Settings** tab (top menu)
 3. Click **Pages** in left sidebar
 4. Under "Build and deployment":
@@ -89,10 +85,8 @@ git remote add origin https://github.com/pocket-midi/kb1-flash.git
 
 Your site will be live at:
 ```
-https://YOUR_USERNAME.github.io/kb1-flash/
+https://PocketMidi.github.io/KB1-flash/
 ```
-
-Example: `https://pocket-midi.github.io/kb1-flash/`
 
 ---
 
@@ -112,11 +106,11 @@ GitHub will automatically rebuild and redeploy!
 
 ## ✅ Verification Checklist
 
-- [ ] Repository created on GitHub
+- [ ] Repository created on GitHub (https://github.com/PocketMidi/KB1-flash)
 - [ ] Code pushed successfully
 - [ ] GitHub Pages enabled (Settings → Pages → GitHub Actions)
 - [ ] Workflow completed (Actions tab shows green checkmark)
-- [ ] Site loads at `https://YOUR_USERNAME.github.io/kb1-flash/`
+- [ ] Site loads at `https://PocketMidi.github.io/KB1-flash/`
 - [ ] Can see the Flash Firmware interface
 - [ ] Serial Monitor tab works
 
@@ -126,9 +120,12 @@ GitHub will automatically rebuild and redeploy!
 
 **If push fails:**
 ```bash
-# Make sure you're using the right username!
-git remote -v  # Shows your current remote URL
-git remote set-url origin https://github.com/CORRECT_USERNAME/kb1-flash.git
+# Check your current remote URL
+git remote -v
+
+# Should show: https://github.com/PocketMidi/KB1-flash.git
+# If different, fix it:
+git remote set-url origin https://github.com/PocketMidi/KB1-flash.git
 git push -u origin main
 ```
 

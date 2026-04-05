@@ -1,5 +1,5 @@
 {
-  "name": "kb1-flash",
+  "name": "KB1-flash",
   "version": "1.0.0",
   "description": "KB1 Firmware Flash Tool - Desktop USB firmware updater with NVS preservation",
   "type": "module",

@@ -150,6 +150,6 @@ MIT License - See LICENSE file
 ## Links
 
 - [KB1 Website](https://kb1.pocketmidi.com)
-- [KB1 Config App](https://github.com/pocket-midi/KB1-config)
-- [KB1 Firmware](https://github.com/pocket-midi/KB1-firmware)
+- [KB1 Config App](https://github.com/PocketMidi/KB1-config)
+- [KB1 Firmware](https://github.com/PocketMidi/KB1-firmware)
 - [Pocket MIDI](https://pocketmidi.com)
