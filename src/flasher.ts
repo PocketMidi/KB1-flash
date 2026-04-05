@@ -76,7 +76,40 @@ export class KB1Flasher {
     }
 
     /**
-     * Connect to ESP32 bootloader
+     * Connect to ESP32 bootloader (public method for initial connection)
+     */
+    async connectToDevice(): Promise<void> {
+        try {
+            if (!this.port) {
+                throw new Error('No USB port selected');
+            }
+
+            console.log('Creating transport and loader...');
+
+            // Create transport (will open port automatically)
+            this.transport = new Transport(this.port, true);
+            this.loader = new ESPLoader({
+                transport: this.transport,
+                baudrate: BAUDRATE,
+                romBaudrate: BAUDRATE,
+            });
+
+            // Connect to bootloader
+            await this.loader.main();
+
+            console.log('Connected to ESP32 bootloader');
+
+            // Wait a bit for stub to stabilize
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('Bootloader ready');
+        } catch (error) {
+            console.error('Connection failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Connect to ESP32 bootloader (private method with status updates for flash workflow)
      */
     private async connect(): Promise<void> {
         this.updateStatus('checking-usb', 0, 'Connecting to KB1...');
@@ -104,6 +137,59 @@ export class KB1Flasher {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             this.updateStatus('error', 0, 'Failed to connect', message);
+            throw error;
+        }
+    }
+
+    /**
+     * Read NVS data without status updates (for initial device info)
+     */
+    async readNVS(): Promise<void> {
+        console.log('readNVS() called, checking loader state...');
+        console.log('this.loader:', this.loader);
+        console.log('this.transport:', this.transport);
+        console.log('this.port:', this.port);
+
+        if (!this.loader) {
+            throw new Error('Not connected to device');
+        }
+
+        console.log('Reading NVS partition from device...');
+
+        try {
+            // Read with progress callback to prevent timeout
+            // Retry up to 3 times if timeout occurs
+            let retries = 3;
+            let lastError: Error | null = null;
+
+            while (retries > 0) {
+                try {
+                    this.nvsBackup = await this.loader.readFlash(
+                        NVS_OFFSET,
+                        NVS_SIZE,
+                        (_packet: Uint8Array, progress: number, _totalSize: number) => {
+                            // Silent progress callback to keep connection alive
+                            if (progress % 0.25 === 0 || progress === 1) {
+                                console.log(`Reading NVS: ${Math.floor(progress * 100)}%`);
+                            }
+                        }
+                    );
+                    console.log(`NVS read successfully: ${this.nvsBackup.length} bytes from offset ${NVS_OFFSET.toString(16)}`);
+                    return; // Success!
+                } catch (error) {
+                    lastError = error instanceof Error ? error : new Error('Unknown error');
+                    retries--;
+                    if (retries > 0) {
+                        console.warn(`NVS read failed, retrying... (${retries} attempts left)`);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+            }
+
+            // All retries failed
+            throw lastError || new Error('Failed to read NVS after multiple attempts');
+        } catch (error) {
+            console.error('Failed to read NVS:', error);
             throw error;
         }
     }
@@ -149,8 +235,14 @@ export class KB1Flasher {
 
         try {
             // Convert ArrayBuffer to binary string (esptool-js expects string)
+            // Process in chunks to avoid stack overflow on large files
             const uint8Array = new Uint8Array(firmwareBinary);
-            const binaryString = String.fromCharCode(...uint8Array);
+            const chunkSize = 8192; // 8KB chunks
+            let binaryString = '';
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                const chunk = uint8Array.subarray(i, i + chunkSize);
+                binaryString += String.fromCharCode(...chunk);
+            }
 
             const fileArray = [{
                 data: binaryString,
@@ -214,6 +306,39 @@ export class KB1Flasher {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             this.updateStatus('error', 0, 'Failed to restore settings', message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get NVS backup data (for inspection)
+     */
+    getNVSBackup(): Uint8Array | null {
+        return this.nvsBackup;
+    }
+
+    /**
+     * Reset device to firmware mode and close bootloader connection
+     * This allows serial monitor to connect to the running firmware
+     */
+    async resetToFirmware(): Promise<void> {
+        try {
+            if (this.loader) {
+                console.log('Performing hard reset...');
+                await this.loader.hardReset();
+                console.log('Device reset to firmware mode');
+            }
+
+            // Close the port to release it for serial monitor
+            if (this.transport) {
+                await this.transport.disconnect();
+                this.transport = null;
+            }
+
+            this.loader = null;
+            // Keep port reference for re-connection during flash
+        } catch (error) {
+            console.error('Failed to reset device:', error);
             throw error;
         }
     }

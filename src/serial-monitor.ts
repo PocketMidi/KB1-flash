@@ -31,10 +31,21 @@ export class SerialMonitor {
         }
 
         try {
-            // Request port from user
-            this.port = await navigator.serial.requestPort({
-                filters: [{ usbVendorId: 0x303a }] // Espressif ESP32
+            // Use a previously-granted port if available (avoids the picker dialog)
+            const grantedPorts = await navigator.serial.getPorts();
+            const espPort = grantedPorts.find(p => {
+                const info = p.getInfo();
+                return info.usbVendorId === 0x303a;
             });
+
+            if (espPort) {
+                this.port = espPort;
+            } else {
+                // First time: ask the user to select the port
+                this.port = await navigator.serial.requestPort({
+                    filters: [{ usbVendorId: 0x303a }] // Espressif ESP32
+                });
+            }
 
             if (!this.port) {
                 throw new Error('No port selected');

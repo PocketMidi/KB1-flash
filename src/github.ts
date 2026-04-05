@@ -5,7 +5,7 @@
 import type { GitHubRelease } from './types';
 
 const GITHUB_OWNER = 'PocketMidi';
-const GITHUB_REPO = 'KB1-firmware';
+const GITHUB_REPO = 'KB1';
 const RELEASES_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
 
 /**
@@ -35,10 +35,19 @@ export async function downloadFirmware(
     onProgress?: (loaded: number, total: number) => void
 ): Promise<ArrayBuffer> {
     try {
-        const response = await fetch(url);
+        console.log('Downloading firmware from:', url);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: {
+                'Accept': 'application/octet-stream',
+            }
+        });
 
         if (!response.ok) {
-            throw new Error(`Download failed: ${response.statusText}`);
+            throw new Error(`Download failed: ${response.status} ${response.statusText}`);
         }
 
         const contentLength = response.headers.get('content-length');

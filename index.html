@@ -1,145 +1,380 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="en" data-theme="dark">
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KB1 Flash Tool</title>
+    <title>KB1 Flash Tools</title>
+    <link rel="icon" type="image/svg+xml" href="/pm_fav.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/src/style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <!-- Header -->
-      <header>
-        <h1>KB1 Flash Tool</h1>
-        <p class="subtitle">Desktop Firmware Updater</p>
-      </header>
+</head>
 
-      <!-- Browser Compatibility Warning -->
-      <div id="browser-warning" class="warning hidden">
-        <strong>⚠️ Browser Not Supported</strong>
+<body>
+    <!-- Browser Compatibility Warning -->
+    <div id="browser-warning" class="warning hidden">
+        <strong>Browser Not Supported</strong>
         <p>This tool requires Chrome, Edge, or Opera on desktop.</p>
         <p>Web Serial API is not available in this browser.</p>
-      </div>
-
-      <!-- Tab Navigation -->
-      <nav class="tabs">
-        <button class="tab active" data-tab="flash">Flash Firmware</button>
-        <button class="tab" data-tab="serial">Serial Monitor</button>
-      </nav>
-
-      <!-- Flash Tab -->
-      <div id="flash-tab" class="tab-content active">
-        <!-- Connection Status -->
-        <div class="status-bar">
-          <div id="connection-status" class="status disconnected">
-            <span class="indicator"></span>
-            <span id="status-text">Not Connected</span>
-          </div>
-        </div>
-
-        <!-- Firmware Source Selection -->
-        <section class="card">
-          <h2>Select Firmware</h2>
-          
-          <!-- GitHub Releases -->
-          <div class="firmware-option">
-            <h3>Latest Release</h3>
-            <div id="github-releases">
-              <p class="loading">Loading releases...</p>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="divider">OR</div>
-
-          <!-- Local File Upload -->
-          <div class="firmware-option">
-            <h3>Custom Firmware File</h3>
-            <div class="file-upload">
-              <input type="file" id="file-input" accept=".bin" />
-              <label for="file-input" class="file-label">
-                <span id="file-name">Drop .bin file or click to browse</span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- Flash Progress -->
-        <section id="flash-progress" class="card hidden">
-          <h2>Flashing Progress</h2>
-          <div class="progress-steps">
-            <div class="step" data-step="checking-usb">
-              <span class="step-icon">1</span>
-              <span class="step-label">Connecting</span>
-            </div>
-            <div class="step" data-step="backing-up-nvs">
-              <span class="step-icon">2</span>
-              <span class="step-label">Backup Settings</span>
-            </div>
-            <div class="step" data-step="flashing-firmware">
-              <span class="step-icon">3</span>
-              <span class="step-label">Flash Firmware</span>
-            </div>
-            <div class="step" data-step="restoring-nvs">
-              <span class="step-icon">4</span>
-              <span class="step-label">Restore Settings</span>
-            </div>
-          </div>
-          <div class="progress-bar">
-            <div id="progress-fill" class="progress-fill"></div>
-          </div>
-          <p id="progress-message" class="progress-message"></p>
-        </section>
-
-        <!-- Success Message -->
-        <section id="flash-complete" class="card success hidden">
-          <h2>✓ Firmware Update Complete</h2>
-          <p>Your KB1 has been updated successfully!</p>
-          <p class="note">Battery calibration and settings have been preserved.</p>
-          <button id="reset-btn" class="btn btn-secondary">Flash Another Device</button>
-        </section>
-
-        <!-- Error Message -->
-        <section id="flash-error" class="card error hidden">
-          <h2>⚠ Update Failed</h2>
-          <p id="error-message"></p>
-          <button id="retry-btn" class="btn btn-secondary">Try Again</button>
-        </section>
-
-        <!-- Info Box -->
-        <section class="info-box">
-          <p><strong>Important:</strong></p>
-          <ul>
-            <li>Connect KB1 via USB-C cable</li>
-            <li>Battery calibration will be preserved automatically</li>
-            <li>Do not disconnect during update</li>
-            <li>Device will restart automatically when complete</li>
-          </ul>
-        </section>
-      </div>
-
-      <!-- Serial Monitor Tab -->
-      <div id="serial-tab" class="tab-content">
-        <section class="card">
-          <div class="serial-controls">
-            <button id="serial-connect-btn" class="btn btn-primary">Connect</button>
-            <button id="serial-disconnect-btn" class="btn btn-secondary hidden">Disconnect</button>
-            <button id="serial-clear-btn" class="btn btn-secondary">Clear</button>
-            <label>
-              <input type="checkbox" id="auto-scroll" checked />
-              Auto-scroll
-            </label>
-          </div>
-          <div id="serial-output" class="serial-output"></div>
-        </section>
-      </div>
-
-      <!-- Footer -->
-      <footer>
-        <p>KB1 Flash Tool v1.0.0 | <a href="https://kb1.pocketmidi.com" target="_blank">kb1.pocketmidi.com</a></p>
-      </footer>
     </div>
 
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <img id="logo" src="PM1.svg" alt="Pocket MIDI" class="logo" />
+
+            <div class="sidebar-sections">
+                <button class="sidebar-btn active" data-section="flash">
+                    <span class="sidebar-icon">⬢</span>
+                    <span>Flash</span>
+                </button>
+
+                <button class="sidebar-btn" data-section="info">
+                    <span class="sidebar-icon">ⓘ</span>
+                    <span>Device Info</span>
+                </button>
+
+                <button class="sidebar-btn" data-section="serial">
+                    <span class="sidebar-icon">▤</span>
+                    <span>Serial Monitor</span>
+                </button>
+
+                <button class="sidebar-btn" data-section="about">
+                    <span class="sidebar-icon">?</span>
+                    <span>About</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Right Content Area -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <span class="app-title">KB1 Flash Tools</span>
+                    <span id="version-number" class="version">v1.6.0</span>
+                </div>
+
+                <div class="top-bar-right">
+                    <button id="connect-btn" class="btn-connect">
+                        <span class="btn-connect-icon">●</span>
+                        <div class="btn-spinner"></div>
+                        <span class="btn-connect-label">CONNECT</span>
+                    </button>
+
+                    <button id="disconnect-btn" class="btn-disconnect hidden">
+                        <span class="btn-icon">⏏</span>
+                        <span>DISCONNECT</span>
+                    </button>
+
+                    <select id="language-select" class="language-select">
+                        <option value="en">ENGLISH</option>
+                        <option value="es">ESPAÑOL</option>
+                        <option value="fr">FRANÇAIS</option>
+                        <option value="de">DEUTSCH</option>
+                        <option value="ja">日本語</option>
+                        <option value="zh">中文</option>
+                    </select>
+
+                    <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+                        <img id="theme-icon" src="lite.svg" alt="Light mode" class="theme-icon" />
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Panels -->
+            <main class="content-area">
+                <!-- Flash Tool Section -->
+                <section id="section-flash" class="content-section active">
+                    <!-- Connection Status -->
+                    <div class="header-with-status">
+                        <div class="heading-with-help">
+                            <h2>Firmware Update</h2>
+                            <button class="help-btn" data-modal="flash" title="How to use">?</button>
+                        </div>
+                        <div id="flash-success-badge" class="success-badge hidden">
+                            <span>✓</span> Update Complete!
+                        </div>
+                        <div id="connection-status" class="inline-status disconnected">
+                            <div class="status-indicator"></div>
+                            <span id="status-message">Not Connected</span>
+                        </div>
+                    </div>
+
+                    <!-- Flash Progress -->
+                    <div id="flash-progress" class="card compact">
+                        <div class="header-with-subtitle">
+                            <h3>Update Progress</h3>
+                            <p id="progress-message" class="progress-subtitle">Select a firmware version or upload a
+                                .bin file to begin</p>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="step" data-step="checking-usb">
+                                <div class="step-icon">1</div>
+                                <div class="step-label">Connect</div>
+                                <div class="step-progress">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="backing-up-nvs">
+                                <div class="step-icon">2</div>
+                                <div class="step-label">Backup NVS</div>
+                                <div class="step-progress">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="flashing-firmware">
+                                <div class="step-icon">3</div>
+                                <div class="step-label">Flash</div>
+                                <div class="step-progress">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="step" data-step="restoring-nvs">
+                                <div class="step-icon">4</div>
+                                <div class="step-label">Restore NVS</div>
+                                <div class="step-progress">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overall-progress">
+                            <div class="progress-bar">
+                                <div id="progress-fill" class="progress-fill"></div>
+                                <span id="progress-percent" class="progress-percent-overlay">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Firmware Selection -->
+                    <div class="card compact">
+                        <h3>Select Firmware Source</h3>
+
+                        <!-- GitHub Releases -->
+                        <div class="firmware-source">
+                            <h4>Latest Releases</h4>
+                            <div id="releases-loading" class="spinner-container">
+                                <div class="spinner"></div>
+                                <span>Loading releases...</span>
+                            </div>
+                            <div id="releases-list" class="releases-scroll-container" style="display: none;">
+                                <!-- Populated dynamically -->
+                            </div>
+                            <button id="flash-github-btn" class="btn btn-primary"
+                                style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                Flash Selected Version
+                            </button>
+                        </div>
+
+                        <div class="divider">OR</div>
+
+                        <!-- Local File Upload -->
+                        <div class="firmware-source">
+                            <h4>Custom Firmware File</h4>
+                            <div class="file-upload-area">
+                                <input type="file" id="file-input" accept=".bin" />
+                                <label for="file-input" id="file-drop-zone" class="file-drop-zone">
+                                    <span class="upload-icon">📁</span>
+                                    <span id="file-name">Drop .bin file or click to browse</span>
+                                </label>
+                            </div>
+                            <button id="flash-local-btn" class="btn btn-primary"
+                                style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                Flash Custom Firmware
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Success/Error Messages -->
+                    <div id="flash-complete" class="card success-card hidden compact">
+                        <h3>Update Complete</h3>
+                        <p>KB1 updated successfully! Battery calibration preserved.</p>
+                        <button id="reset-btn" class="btn btn-secondary">Flash Another Device</button>
+                    </div>
+
+                    <div id="flash-error" class="card error-card hidden compact">
+                        <h3>Update Failed</h3>
+                        <p id="error-message"></p>
+                        <button id="retry-btn" class="btn btn-secondary">Try Again</button>
+                    </div>
+
+                </section>
+
+                <!-- Device Info Section -->
+                <section id="section-info" class="content-section">
+                    <div class="header-with-status">
+                        <div class="heading-with-help">
+                            <h2>Device Information</h2>
+                            <button class="help-btn" data-modal="device" title="About device info">?</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="info-grid" id="device-info">
+                            <div class="info-item">
+                                <span class="info-label">Device:</span>
+                                <span class="info-value" id="device-name">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Chip:</span>
+                                <span class="info-value" id="device-chip-type">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">MAC Address:</span>
+                                <span class="info-value" id="device-mac">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Flash Size:</span>
+                                <span class="info-value" id="device-flash-size">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Latest Available:</span>
+                                <span class="info-value" id="device-latest-firmware">-</span>
+                            </div>
+                        </div>
+
+                        <div class="heading-with-help">
+                            <h3>NVS Inspector</h3>
+                            <button class="help-btn" data-modal="nvs" title="What is NVS?">?</button>
+                        </div>
+                        <h4>Battery Calibration Data</h4>
+                        <div class="info-grid" id="nvs-data">
+                            <div class="info-item">
+                                <span class="info-label">Battery Percentage:</span>
+                                <span class="info-value" id="nvs-bat-pct">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">BLE On Time:</span>
+                                <span class="info-value" id="nvs-bat-ble-on-ms">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">BLE Off Time:</span>
+                                <span class="info-value" id="nvs-bat-ble-off-ms">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Discharge Time:</span>
+                                <span class="info-value" id="nvs-bat-disch-ms">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Calibration Time:</span>
+                                <span class="info-value" id="nvs-bat-cal-time">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Is Charging Mode:</span>
+                                <span class="info-value" id="nvs-is-charging">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">USB At Boot:</span>
+                                <span class="info-value" id="nvs-usb-boot">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">NVS Size:</span>
+                                <span class="info-value">20 KB @ 0x9000</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Serial Monitor Section -->
+                <section id="section-serial" class="content-section">
+                    <h2>Serial Monitor</h2>
+                    <div class="terminal-container">
+                        <div class="terminal-toolbar">
+                            <div class="terminal-toolbar-left">
+                                <span class="terminal-port-label" id="terminal-port-label">● Monitor closed</span>
+                            </div>
+                            <div class="terminal-toolbar-right">
+                                <label class="terminal-checkbox">
+                                    <input type="checkbox" id="auto-scroll" checked />
+                                    <span>Auto-scroll</span>
+                                </label>
+                                <button id="serial-clear-btn" class="terminal-btn">Clear</button>
+                                <button id="serial-disconnect-btn" class="terminal-btn terminal-btn-danger hidden">Close
+                                    Monitor</button>
+                                <button id="serial-connect-btn" class="terminal-btn terminal-btn-primary">Open
+                                    Monitor</button>
+                            </div>
+                        </div>
+                        <div id="serial-output" class="serial-output"><span class="serial-placeholder">Waiting for
+                                serial connection...</span></div>
+                    </div>
+                </section>
+
+                <!-- About Section -->
+                <section id="section-about" class="content-section">
+                    <h2>About</h2>
+                    <div class="card">
+                        <div class="about-content">
+                            <p class="about-description">KB1 Flash Tool is free and open source. The firmware, config
+                                app, and flash tool are all MIT licensed and available on GitHub.</p>
+                            <div class="link-grid">
+                                <a href="https://github.com/PocketMidi" target="_blank" class="project-link">
+                                    <span>→</span>
+                                    <span>GitHub Repositories</span>
+                                </a>
+                                <a href="https://pocketmidi.com" target="_blank" class="project-link">
+                                    <span>→</span>
+                                    <span>Pocket MIDI Website</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="help-modal-overlay hidden">
+        <div class="help-modal-box">
+            <button class="help-modal-close" id="help-modal-close">✕</button>
+            <div id="help-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Help Content Templates -->
+    <template id="flash-help-content">
+        <h3>Flashing Firmware</h3>
+        <ul>
+            <li>Connect KB1 via USB-C cable before clicking Connect</li>
+            <li>Battery calibration data is automatically backed up and restored</li>
+            <li>Do not disconnect the device during the update process</li>
+            <li>The device will restart automatically when the update is complete</li>
+            <li>Requires Chrome, Edge, or Opera on desktop</li>
+        </ul>
+    </template>
+
+    <template id="device-help-content">
+        <h3>Device Information</h3>
+        <p>Shows hardware details read directly from your KB1 over USB when connected &mdash; chip type, MAC address,
+            flash size, and the latest firmware version available on GitHub.</p>
+    </template>
+
+    <template id="nvs-help-content">
+        <h3>What is NVS?</h3>
+        <p>NVS (Non-Volatile Storage) is a small 20&thinsp;KB partition on the ESP32&rsquo;s flash memory, separate from
+            the firmware itself. It persists across reboots and retains its data even after a firmware update.</p>
+        <h4>What&rsquo;s stored here?</h4>
+        <p>KB1 uses NVS to store the battery calibration model &mdash; a set of values built up over real
+            charge/discharge cycles that lets the firmware accurately report battery percentage. The key fields are:</p>
+        <ul>
+            <li><strong>Battery Percentage</strong> &mdash; last known state of charge</li>
+            <li><strong>BLE On / Off Time</strong> &mdash; cumulative radio-on/off durations used in the capacity model
+            </li>
+            <li><strong>Discharge Time</strong> &mdash; total measured discharge time</li>
+            <li><strong>Calibration Time</strong> &mdash; timestamp of the last successful calibration</li>
+        </ul>
+        <h4>Why does the flash tool preserve it?</h4>
+        <p>A standard firmware flash erases the entire flash partition, which would wipe out weeks of calibration data
+            and reset the battery indicator to a rough estimate. KB1 Flash Tool reads the NVS partition <em>before</em>
+            flashing and writes it back <em>after</em> &mdash; so your battery gauge stays accurate across every update.
+        </p>
+    </template>
+
     <script type="module" src="/src/main.ts"></script>
-  </body>
+</body>
+
 </html>
