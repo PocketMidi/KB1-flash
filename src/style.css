@@ -190,17 +190,6 @@ body {
     font-size: 1.1rem !important;
 }
 
-.language-select {
-    padding: 6px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 0.85rem !important;
-    font-weight: 400;
-    cursor: pointer;
-}
-
 .theme-toggle {
     background: transparent;
     border: none;
@@ -1209,7 +1198,7 @@ body {
     gap: 10px;
     font-size: 0.9rem;
     z-index: 2000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     color: var(--text-primary);
