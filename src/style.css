@@ -231,7 +231,7 @@ body {
 /* Top Bar */
 .top-bar {
     height: var(--top-bar-height);
-    background: #000;
+    background: var(--bg-secondary);
     display: flex;
     align-items: center;
     justify-content: space-between;
