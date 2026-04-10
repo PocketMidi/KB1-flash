@@ -20,6 +20,13 @@
         <p>Web Serial API is not available in this browser.</p>
     </div>
 
+    <!-- Mobile USB Warning (CSS-only, shown on small screens) -->
+    <div class="mobile-warning">
+        <strong>USB not supported on mobile</strong>
+        <p>This tool uses the Web Serial API, which requires a desktop browser (Chrome, Edge, or Opera). It will not
+            work on iOS, and is unreliable on Android.</p>
+    </div>
+
     <!-- Main App Container -->
     <div id="app" class="app-container">
         <!-- Sidebar -->
@@ -84,7 +91,7 @@
                     <div class="header-with-status">
                         <div class="heading-with-help">
                             <h2>Firmware Update</h2>
-                            <button class="help-btn" data-modal="flash" title="How to use">?</button>
+                            <button class="help-btn" data-modal="flash" title="How to use">i</button>
                         </div>
                         <div id="flash-success-badge" class="success-badge hidden">
                             <span>✓</span> Update Complete!
@@ -220,7 +227,7 @@
                     <div class="header-with-status">
                         <div class="heading-with-help">
                             <h2>Device Information</h2>
-                            <button class="help-btn" data-modal="device" title="About device info">?</button>
+                            <button class="help-btn" data-modal="device" title="About device info">i</button>
                         </div>
                     </div>
                     <div class="card">
@@ -249,7 +256,7 @@
 
                         <div class="heading-with-help">
                             <h3>NVS Inspector</h3>
-                            <button class="help-btn" data-modal="nvs" title="What is NVS?">?</button>
+                            <button class="help-btn" data-modal="nvs" title="What is NVS?">i</button>
                         </div>
                         <h4>Battery Calibration Data</h4>
                         <div class="info-grid" id="nvs-data">
