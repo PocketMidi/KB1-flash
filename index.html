@@ -140,43 +140,64 @@
                         </div>
                     </div>
 
-                    <!-- Firmware Selection -->
-                    <div class="card compact">
-                        <h3>Select Firmware Source</h3>
+                    <!-- Two-column grid -->
+                    <div class="flash-grid">
 
-                        <!-- GitHub Releases -->
-                        <div class="firmware-source">
-                            <h4>Latest Releases</h4>
-                            <div id="releases-loading" class="spinner-container">
-                                <div class="spinner"></div>
-                                <span>Loading releases...</span>
+                        <!-- Left: release picker -->
+                        <div class="flash-col-main">
+                            <div class="card compact">
+                                <h3>Flash Latest Release from GitHub</h3>
+                                <div id="releases-loading" class="spinner-container">
+                                    <div class="spinner"></div>
+                                    <span>Loading releases...</span>
+                                </div>
+                                <div id="releases-list" class="releases-scroll-container" style="display: none;">
+                                    <!-- Populated dynamically -->
+                                </div>
+                                <button id="flash-github-btn" class="btn btn-primary"
+                                    style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                    Flash Selected Version
+                                </button>
+
+                                <!-- Clear data toggle -->
+                                <div class="clear-data-toggle">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" id="clear-data-toggle" />
+                                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                        <span class="toggle-text">Clear device data on update</span>
+                                    </label>
+                                    <p id="clear-data-warning" class="clear-data-warning hidden">
+                                        ⚠ All presets, calibration, and settings will be erased. This cannot be undone.
+                                    </p>
+                                </div>
                             </div>
-                            <div id="releases-list" class="releases-scroll-container" style="display: none;">
-                                <!-- Populated dynamically -->
-                            </div>
-                            <button id="flash-github-btn" class="btn btn-primary"
-                                style="margin-top: 8px; width: 100%; display: none;" disabled>
-                                Flash Selected Version
-                            </button>
                         </div>
 
-                        <div class="divider">OR</div>
-
-                        <!-- Local File Upload -->
-                        <div class="firmware-source">
-                            <h4>Custom Firmware File</h4>
-                            <div class="file-upload-area">
-                                <input type="file" id="file-input" accept=".bin" />
-                                <label for="file-input" id="file-drop-zone" class="file-drop-zone">
-                                    <span class="upload-icon">📁</span>
-                                    <span id="file-name">Drop .bin file or click to browse</span>
-                                </label>
+                        <!-- Right: custom file + clear data -->
+                        <div class="flash-col-side">
+                            <div class="card compact">
+                                <h3>Flash from Custom Firmware File</h3>
+                                <div class="file-upload-area">
+                                    <input type="file" id="file-input" accept=".bin" />
+                                    <label for="file-input" id="file-drop-zone" class="file-drop-zone">
+                                        <span class="upload-icon">📁</span>
+                                        <span id="file-name">Drop .bin file or click to browse</span>
+                                    </label>
+                                </div>
+                                <button id="flash-local-btn" class="btn btn-primary"
+                                    style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                    Flash Custom Firmware
+                                </button>
                             </div>
-                            <button id="flash-local-btn" class="btn btn-primary"
-                                style="margin-top: 8px; width: 100%; display: none;" disabled>
-                                Flash Custom Firmware
-                            </button>
+
+                            <div class="card compact">
+                                <h3>Clear Device Data</h3>
+                                <p class="card-description">Remove all saved presets, calibration data, and settings
+                                    from the device. Connect via USB first.</p>
+                                <button id="clear-device-data-btn" class="btn btn-danger">Clear Device Data</button>
+                            </div>
                         </div>
+
                     </div>
 
                     <!-- Success/Error Messages -->
@@ -345,11 +366,15 @@
         <h3>Flashing Firmware</h3>
         <ul>
             <li>Connect KB1 via USB-C cable before clicking Connect</li>
-            <li>Battery calibration data is automatically backed up and restored</li>
+            <li>Battery calibration data is automatically backed up and restored* &mdash; steps 2 and 4 in the progress
+                tracker</li>
             <li>Do not disconnect the device during the update process</li>
             <li>The device will restart automatically when the update is complete</li>
             <li>Requires Chrome, Edge, or Opera on desktop</li>
         </ul>
+        <p style="margin-top: 10px; font-style: italic; font-size: 0.85rem; color: var(--text-secondary);">* <span
+                style="font-size: 0.9rem;">&#9745;</span> <strong style="font-style: normal;">Clear device data on
+                update</strong> will skip steps 2 &amp; 4</p>
     </template>
 
     <template id="device-help-content">

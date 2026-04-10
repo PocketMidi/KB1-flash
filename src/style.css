@@ -720,6 +720,93 @@ body {
     background: var(--bg-secondary);
 }
 
+.btn-danger {
+    background: var(--error, #f44336);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+.btn-danger:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Clear data toggle */
+.clear-data-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--error, #f44336);
+    cursor: pointer;
+}
+
+.clear-data-warning {
+    font-size: 0.82rem;
+    color: var(--error, #f44336);
+    margin: 0;
+    padding: 6px 8px;
+    background: rgba(244, 67, 54, 0.08);
+    border-left: 3px solid var(--error, #f44336);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Card description */
+.card-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+}
+
+/* Flash two-column grid */
+.flash-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: var(--spacing-md);
+    align-items: stretch;
+    margin-bottom: var(--spacing-md);
+}
+
+.flash-col-main,
+.flash-col-side {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Left column's single card stretches to fill the full row height */
+.flash-col-main .card {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.flash-col-side .card {
+    margin-bottom: var(--spacing-md);
+}
+
+.flash-col-side .card:last-child {
+    margin-bottom: 0;
+}
+
 /* Progress */
 .progress-steps {
     display: flex;
@@ -810,6 +897,26 @@ body {
 .step.complete .step-progress-fill {
     width: 100%;
     background: var(--success);
+}
+
+/* Skipped steps (clear data mode) — shown before flash starts */
+.step.step-skipped:not(.active):not(.complete) {
+    opacity: 0.7;
+}
+
+.step.step-skipped:not(.active):not(.complete) .step-icon {
+    border-color: var(--error, #f44336);
+    font-size: 0 !important;
+}
+
+.step.step-skipped:not(.active):not(.complete) .step-icon::before {
+    content: '✕';
+    font-size: 0.9rem;
+    color: var(--error, #f44336);
+}
+
+.step.step-skipped:not(.active):not(.complete) .step-label {
+    color: var(--error, #f44336);
 }
 
 .overall-progress {

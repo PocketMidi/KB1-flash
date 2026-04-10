@@ -366,21 +366,68 @@ export class KB1Flasher {
     }
 
     /**
-     * Main flash workflow
+     * Erase NVS partition (write blank 0xFF bytes)
      */
-    async flash(firmwareBinary: ArrayBuffer): Promise<void> {
+    async clearNVS(): Promise<void> {
+        if (!this.loader) {
+            throw new Error('Not connected to device');
+        }
+
+        this.updateStatus('backing-up-nvs', 10, 'Clearing device data...');
+
+        try {
+            const blank = new Uint8Array(NVS_SIZE).fill(0xFF);
+            const binaryString = String.fromCharCode(...blank);
+
+            await this.loader.writeFlash({
+                fileArray: [{ data: binaryString, address: NVS_OFFSET }],
+                flashSize: FLASH_SIZE,
+                flashMode: FLASH_MODE,
+                flashFreq: FLASH_FREQ,
+                eraseAll: false,
+                compress: true,
+                reportProgress: (_fileIndex, written, total) => {
+                    const progress = 10 + Math.floor((written / total) * 20);
+                    this.updateStatus('backing-up-nvs', progress, 'Clearing device data...');
+                },
+            });
+
+            console.log('NVS cleared successfully');
+            this.updateStatus('backing-up-nvs', 30, 'Device data cleared');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            this.updateStatus('error', 0, 'Failed to clear device data', message);
+            throw error;
+        }
+    }
+
+    /**
+     * Main flash workflow
+     * @param firmwareBinary - firmware binary to flash
+     * @param clearData - if true, skip backup/restore and clear NVS instead
+     */
+    async flash(firmwareBinary: ArrayBuffer, clearData = false): Promise<void> {
         try {
             // Step 1: Connect to device
             await this.connect();
 
-            // Step 2: Backup NVS
-            await this.backupNVS();
+            if (clearData) {
+                // Clear NVS instead of backing up
+                await this.clearNVS();
+            } else {
+                // Step 2: Backup NVS
+                await this.backupNVS();
+            }
 
             // Step 3: Flash firmware
             await this.flashFirmware(firmwareBinary);
 
-            // Step 4: Restore NVS
-            await this.restoreNVS();
+            if (!clearData) {
+                // Step 4: Restore NVS
+                await this.restoreNVS();
+            } else {
+                this.updateStatus('restoring-nvs', 95, 'Skipping data restore');
+            }
 
             // Complete
             this.updateStatus('complete', 100, 'Firmware update complete!');
@@ -389,6 +436,22 @@ export class KB1Flasher {
             await this.disconnect();
         } catch (error) {
             console.error('Firmware update failed:', error);
+            await this.disconnect();
+            throw error;
+        }
+    }
+
+    /**
+     * Standalone clear device data (without flashing firmware)
+     */
+    async clearDeviceData(): Promise<void> {
+        try {
+            await this.connect();
+            await this.clearNVS();
+            this.updateStatus('complete', 100, 'Device data cleared successfully.');
+            await this.disconnect();
+        } catch (error) {
+            console.error('Clear device data failed:', error);
             await this.disconnect();
             throw error;
         }

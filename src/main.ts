@@ -7,7 +7,7 @@ import { KB1Flasher } from './flasher';
 import { downloadFirmware, fetchReleases } from './github';
 import { SerialMonitor } from './serial-monitor';
 import './style.css';
-import type { FirmwareFile, FlashStatus, FirmwareRelease } from './types';
+import type { FirmwareFile, FirmwareRelease, FlashStatus } from './types';
 
 // Initialize
 let flasher: KB1Flasher | null = null;
@@ -123,6 +123,9 @@ function init(): void {
     // Setup reset/retry buttons
     resetBtn.addEventListener('click', resetFlash);
     retryBtn.addEventListener('click', resetFlash);
+
+    // Setup clear device data
+    setupClearDeviceData();
 }
 
 /**
@@ -600,6 +603,9 @@ async function startFlash(): Promise<void> {
         return;
     }
 
+    const clearDataToggle = document.getElementById('clear-data-toggle') as HTMLInputElement;
+    const clearData = clearDataToggle?.checked ?? false;
+
     try {
         // Create flasher if not exists
         if (!flasher) {
@@ -623,7 +629,7 @@ async function startFlash(): Promise<void> {
         flashError.classList.add('hidden');
 
         // Start flashing
-        await flasher.flash(currentFirmware.data);
+        await flasher.flash(currentFirmware.data, clearData);
 
         // Show success
         showComplete();
@@ -632,6 +638,54 @@ async function startFlash(): Promise<void> {
         const message = error instanceof Error ? error.message : 'Unknown error';
         showError(message);
     }
+}
+
+/**
+ * Setup clear device data button
+ */
+function setupClearDeviceData(): void {
+    const clearBtn = document.getElementById('clear-device-data-btn') as HTMLButtonElement;
+    const clearToggle = document.getElementById('clear-data-toggle') as HTMLInputElement;
+    const clearWarning = document.getElementById('clear-data-warning') as HTMLElement;
+
+    const backupStep = document.querySelector<HTMLElement>('.step[data-step="backing-up-nvs"]');
+    const restoreStep = document.querySelector<HTMLElement>('.step[data-step="restoring-nvs"]');
+
+    // Toggle warning + progress step visual when checkbox changes
+    clearToggle?.addEventListener('change', () => {
+        clearWarning.classList.toggle('hidden', !clearToggle.checked);
+        backupStep?.classList.toggle('step-skipped', clearToggle.checked);
+        restoreStep?.classList.toggle('step-skipped', clearToggle.checked);
+    });
+
+    clearBtn?.addEventListener('click', async () => {
+        const confirmed = confirm(
+            'This will permanently erase all presets, calibration data, and settings from your KB1.\n\nAre you sure you want to continue?'
+        );
+        if (!confirmed) return;
+
+        clearBtn.disabled = true;
+        clearBtn.textContent = 'Clearing...';
+
+        try {
+            // Create a fresh flasher for standalone clear
+            const clearFlasher = new KB1Flasher();
+            clearFlasher.onStatus((status: FlashStatus) => updateFlashUI(status));
+            await clearFlasher.requestPort();
+
+            flashComplete.classList.add('hidden');
+            flashError.classList.add('hidden');
+
+            await clearFlasher.clearDeviceData();
+            showToast('Device data cleared successfully', 'success');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to clear device data';
+            showToast(message, 'error');
+        } finally {
+            clearBtn.disabled = false;
+            clearBtn.textContent = 'Clear Device Data';
+        }
+    });
 }
 
 /**
