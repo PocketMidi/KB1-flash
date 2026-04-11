@@ -373,7 +373,7 @@ export class KB1Flasher {
             throw new Error('Not connected to device');
         }
 
-        this.updateStatus('backing-up-nvs', 10, 'Clearing device data...');
+        this.updateStatus('clearing-nvs', 10, 'Clearing device data...');
 
         try {
             const blank = new Uint8Array(NVS_SIZE).fill(0xFF);
@@ -388,12 +388,12 @@ export class KB1Flasher {
                 compress: true,
                 reportProgress: (_fileIndex, written, total) => {
                     const progress = 10 + Math.floor((written / total) * 20);
-                    this.updateStatus('backing-up-nvs', progress, 'Clearing device data...');
+                    this.updateStatus('clearing-nvs', progress, 'Clearing device data...');
                 },
             });
 
             console.log('NVS cleared successfully');
-            this.updateStatus('backing-up-nvs', 30, 'Device data cleared');
+            this.updateStatus('clearing-nvs', 30, 'Device data cleared');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             this.updateStatus('error', 0, 'Failed to clear device data', message);
@@ -425,8 +425,6 @@ export class KB1Flasher {
             if (!clearData) {
                 // Step 4: Restore NVS
                 await this.restoreNVS();
-            } else {
-                this.updateStatus('restoring-nvs', 95, 'Skipping data restore');
             }
 
             // Complete

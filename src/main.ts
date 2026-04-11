@@ -631,6 +631,14 @@ async function startFlash(): Promise<void> {
         // Start flashing
         await flasher.flash(currentFirmware.data, clearData);
 
+        // Update success message based on clear data mode
+        const completeMsg = document.getElementById('flash-complete-message');
+        if (completeMsg) {
+            completeMsg.textContent = clearData
+                ? 'KB1 updated successfully. Device data was cleared.'
+                : 'KB1 updated successfully! Battery calibration preserved.';
+        }
+
         // Show success
         showComplete();
     } catch (error) {
@@ -726,8 +734,10 @@ function updateFlashUI(status: FlashStatus): void {
         step.classList.remove('active', 'complete');
 
         if (stepName === status.step) {
-            // Current active step
-            step.classList.add('active');
+            // Current active step — only if not skipped
+            if (!step.classList.contains('step-skipped')) {
+                step.classList.add('active');
+            }
 
             // Update step progress bar
             const stepProgressFill = step.querySelector('.step-progress-fill') as HTMLElement;
@@ -746,11 +756,13 @@ function updateFlashUI(status: FlashStatus): void {
                 stepProgressFill.style.width = `${stepProgress}%`;
             }
         } else if (thisStepIndex < currentStepIndex) {
-            // Previous steps are complete
-            step.classList.add('complete');
-            const stepProgressFill = step.querySelector('.step-progress-fill') as HTMLElement;
-            if (stepProgressFill) {
-                stepProgressFill.style.width = '100%';
+            // Previous steps are complete — but honour skipped state
+            if (!step.classList.contains('step-skipped')) {
+                step.classList.add('complete');
+                const stepProgressFill = step.querySelector('.step-progress-fill') as HTMLElement;
+                if (stepProgressFill) {
+                    stepProgressFill.style.width = '100%';
+                }
             }
         } else {
             // Future steps - reset progress
@@ -775,14 +787,16 @@ function showComplete(): void {
     // Change progress bar to green
     progressFill.classList.add('success');
 
-    // Mark all steps as complete
+    // Mark steps complete — skipped steps stay as-is
     const steps = document.querySelectorAll('.step');
     steps.forEach(step => {
         step.classList.remove('active');
-        step.classList.add('complete');
-        const stepProgressFill = step.querySelector('.step-progress-fill') as HTMLElement;
-        if (stepProgressFill) {
-            stepProgressFill.style.width = '100%';
+        if (!step.classList.contains('step-skipped')) {
+            step.classList.add('complete');
+            const stepProgressFill = step.querySelector('.step-progress-fill') as HTMLElement;
+            if (stepProgressFill) {
+                stepProgressFill.style.width = '100%';
+            }
         }
     });
 

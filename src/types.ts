@@ -2,13 +2,14 @@
  * KB1 Flash Tool - Type Definitions
  */
 
-export type FlashStep = 
-  | 'idle' 
-  | 'checking-usb' 
-  | 'backing-up-nvs' 
-  | 'flashing-firmware' 
-  | 'restoring-nvs' 
-  | 'complete' 
+export type FlashStep =
+  | 'idle'
+  | 'checking-usb'
+  | 'backing-up-nvs'
+  | 'clearing-nvs'
+  | 'flashing-firmware'
+  | 'restoring-nvs'
+  | 'complete'
   | 'error';
 
 export interface FlashStatus {
