@@ -9,9 +9,9 @@ name: Sync Firmware Release
 # The existing deploy.yml then rebuilds and re-deploys GitHub Pages.
 
 on:
-  repository_dispatch:
-    types: [firmware-released]
-  workflow_dispatch:
+  workflow_dispatch:  # disabled - firmware bins are now added manually
+  # repository_dispatch:
+  #   types: [firmware-released]
     inputs:
       tag:
         description: 'Release tag to sync (e.g. v1.5.1)'
