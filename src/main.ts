@@ -259,11 +259,11 @@ function setupConnectionButtons(): void {
         connectionStatus.classList.add('disconnected');
         statusMessage.textContent = 'Not Connected';
 
-        // Hide success badge
-        flashSuccessBadge.classList.add('hidden');
-
         // Clear device info
         clearDeviceInfo();
+
+        // Reset flash UI
+        resetFlash();
     });
 }
 
@@ -848,20 +848,22 @@ function resetFlash(): void {
     flashLocalBtn.style.display = 'none';
     flashLocalBtn.disabled = true;
 
+    // Reset GitHub selection
+    flashGitHubBtn.disabled = true;
+    document.querySelectorAll<HTMLElement>('.release-list-item').forEach(el => el.classList.remove('selected'));
+
     // Reset progress UI to idle state
     progressFill.style.width = '0%';
     progressFill.classList.remove('success');
     progressPercent.textContent = '0%';
     progressMessage.textContent = 'Select a firmware version or upload a .bin file to begin';
 
-    // Reset all steps
+    // Reset all steps — preserve step-skipped state from toggle
     const steps = document.querySelectorAll('.step');
     steps.forEach(step => {
         step.classList.remove('active', 'complete');
-        const progressFill = step.querySelector('.step-progress-fill') as HTMLElement;
-        if (progressFill) {
-            progressFill.style.width = '0%';
-        }
+        const fill = step.querySelector('.step-progress-fill') as HTMLElement;
+        if (fill) fill.style.width = '0%';
     });
 }
 
