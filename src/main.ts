@@ -17,14 +17,14 @@ let latestVersion: string = 'v1.6.0'; // Default until loaded from GitHub
 
 // DOM elements - Top Bar
 const browserWarning = document.getElementById('browser-warning')!;
-const logo = document.getElementById('logo') as SVGElement;
+const logo = document.getElementById('logo') as unknown as SVGElement;
 const logoBtn = document.getElementById('logo-btn') as HTMLButtonElement;
 const versionDisplay = document.getElementById('version-number')!;
 const btnConnect = document.getElementById('connect-btn')!;
 const btnDisconnect = document.getElementById('disconnect-btn')!;
 const themeToggle = document.getElementById('theme-toggle')!;
-const themeIconLight = document.getElementById('theme-icon-light') as SVGElement;
-const themeIconDark = document.getElementById('theme-icon-dark') as SVGElement;
+const themeIconLight = document.getElementById('theme-icon-light') as unknown as SVGElement;
+const themeIconDark = document.getElementById('theme-icon-dark') as unknown as SVGElement;
 
 // Connection status
 const connectionStatus = document.getElementById('connection-status')!;
