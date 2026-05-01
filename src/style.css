@@ -2,18 +2,19 @@
 /* Dark/Light theme support with sidebar navigation */
 
 :root {
-    /* Dark Theme (Default) */
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #252525;
-    --bg-tertiary: #2f2f2f;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --accent-primary: #4a9eff;
-    --accent-secondary: #6eb5ff;
-    --success: #4caf50;
-    --warning: #ff9800;
-    --error: #f44336;
-    --border: #3a3a3a;
+    /* Dark Theme (Default) - KB1 Muted Palette */
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #252525;
+    --text-primary: #eaeaea;
+    --text-secondary: rgba(234, 234, 234, 0.5);
+    --accent-primary: #4d5f7e;
+    --accent-secondary: #5d6f8e;
+    --accent-bronze: #b9aa5f;
+    --success: #5dad6b;
+    --warning: #f59e0b;
+    --error: #ad4137;
+    --border: rgba(234, 234, 234, 0.2);
     --shadow: rgba(0, 0, 0, 0.3);
 
     /* UI Dimensions */
@@ -120,6 +121,22 @@ body {
     padding: 0;
 }
 
+.logo-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.logo-btn:hover {
+    opacity: 0.7;
+}
+
 .logo {
     width: 100% !important;
     height: auto !important;
@@ -128,7 +145,20 @@ body {
     margin: 0;
     padding: 0;
     flex-shrink: 0;
+}
+
+.logo-link {
+    display: block;
     border-bottom: 1px solid var(--border);
+    transition: opacity 0.2s ease;
+}
+
+.logo-link:hover {
+    opacity: 0.7;
+}
+
+.logo-link .logo {
+    border-bottom: none;
 }
 
 .app-title {
@@ -230,6 +260,11 @@ body {
 .theme-icon {
     width: 24px;
     height: 24px;
+    display: none;
+    color: var(--text-primary);
+}
+
+.theme-icon.active {
     display: block;
 }
 
@@ -745,12 +780,12 @@ body {
 }
 
 .btn-danger {
-    background: var(--error, #f44336);
+    background: var(--error);
     color: #fff;
 }
 
 .btn-danger:hover {
-    background: #d32f2f;
+    background: #923730;
 }
 
 .btn-danger:disabled {
@@ -781,17 +816,17 @@ body {
 .toggle-label input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: var(--error, #f44336);
+    accent-color: var(--error);
     cursor: pointer;
 }
 
 .clear-data-warning {
     font-size: 0.82rem;
-    color: var(--error, #f44336);
+    color: var(--error);
     margin: 0;
     padding: 6px 8px;
-    background: rgba(244, 67, 54, 0.08);
-    border-left: 3px solid var(--error, #f44336);
+    background: rgba(173, 65, 55, 0.08);
+    border-left: 3px solid var(--error);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -929,18 +964,18 @@ body {
 }
 
 .step.step-skipped:not(.active):not(.complete) .step-icon {
-    border-color: var(--error, #f44336);
+    border-color: var(--error);
     font-size: 0 !important;
 }
 
 .step.step-skipped:not(.active):not(.complete) .step-icon::before {
     content: '✕';
     font-size: 0.9rem;
-    color: var(--error, #f44336);
+    color: var(--error);
 }
 
 .step.step-skipped:not(.active):not(.complete) .step-label {
-    color: var(--error, #f44336);
+    color: var(--error);
 }
 
 .overall-progress {
@@ -986,7 +1021,7 @@ body {
 }
 
 .progress-fill.success {
-    background: linear-gradient(90deg, #43a047, #66bb6a);
+    background: linear-gradient(90deg, var(--success), #6ebf7b);
 }
 
 .progress-message {
@@ -1122,7 +1157,7 @@ body {
 }
 
 .terminal-port-label.connected {
-    color: #4ec9b0;
+    color: var(--success);
 }
 
 .terminal-checkbox {
@@ -1136,7 +1171,7 @@ body {
 }
 
 .terminal-checkbox input[type="checkbox"] {
-    accent-color: #4ec9b0;
+    accent-color: var(--success);
     width: 13px;
     height: 13px;
     cursor: pointer;
@@ -1161,21 +1196,21 @@ body {
 }
 
 .terminal-btn.terminal-btn-primary {
-    border-color: #4ec9b0;
-    color: #4ec9b0;
+    border-color: var(--success);
+    color: var(--success);
 }
 
 .terminal-btn.terminal-btn-primary:hover {
-    background: rgba(78, 201, 176, 0.15);
+    background: rgba(93, 173, 107, 0.15);
 }
 
 .terminal-btn.terminal-btn-danger {
-    border-color: #f48771;
-    color: #f48771;
+    border-color: var(--error);
+    color: var(--error);
 }
 
 .terminal-btn.terminal-btn-danger:hover {
-    background: rgba(244, 135, 113, 0.15);
+    background: rgba(173, 65, 55, 0.15);
 }
 
 .serial-output {

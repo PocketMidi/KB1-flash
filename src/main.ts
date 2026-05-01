@@ -17,12 +17,14 @@ let latestVersion: string = 'v1.6.0'; // Default until loaded from GitHub
 
 // DOM elements - Top Bar
 const browserWarning = document.getElementById('browser-warning')!;
-const topLogo = document.getElementById('logo') as HTMLImageElement;
+const logo = document.getElementById('logo') as SVGElement;
+const logoBtn = document.getElementById('logo-btn') as HTMLButtonElement;
 const versionDisplay = document.getElementById('version-number')!;
 const btnConnect = document.getElementById('connect-btn')!;
 const btnDisconnect = document.getElementById('disconnect-btn')!;
 const themeToggle = document.getElementById('theme-toggle')!;
-const themeIcon = document.getElementById('theme-icon') as HTMLImageElement;
+const themeIconLight = document.getElementById('theme-icon-light') as SVGElement;
+const themeIconDark = document.getElementById('theme-icon-dark') as SVGElement;
 
 // Connection status
 const connectionStatus = document.getElementById('connection-status')!;
@@ -132,13 +134,21 @@ function init(): void {
  * Setup sidebar navigation
  */
 function setupSidebarNavigation(): void {
-    sidebarButtons.forEach(btn => {
+    // Add logo button to navigation
+    const allNavButtons = [...Array.from(sidebarButtons), logoBtn];
+
+    allNavButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const section = btn.getAttribute('data-section');
 
-            // Update sidebar buttons
+            // Update sidebar buttons (not logo button)
             sidebarButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            const matchingSidebarBtn = Array.from(sidebarButtons).find(
+                b => b.getAttribute('data-section') === section
+            );
+            if (matchingSidebarBtn) {
+                matchingSidebarBtn.classList.add('active');
+            }
 
             // Update content sections
             contentSections.forEach(s => {
@@ -174,13 +184,15 @@ function setupThemeToggle(): void {
  * Update logo and theme icons based on theme
  */
 function updateThemeAssets(theme: string): void {
-    // Use relative paths that work with Vite's base URL configuration
+    // Update logo color via CSS variable
     if (theme === 'dark') {
-        topLogo.src = new URL('../public/PM1.svg', import.meta.url).href;
-        themeIcon.src = new URL('../public/lite.svg', import.meta.url).href;
+        logo.style.setProperty('--logo-color', '#df8917');
+        themeIconLight.classList.add('active');
+        themeIconDark.classList.remove('active');
     } else {
-        topLogo.src = new URL('../public/PM2.svg', import.meta.url).href;
-        themeIcon.src = new URL('../public/dark.svg', import.meta.url).href;
+        logo.style.setProperty('--logo-color', '#000000');
+        themeIconLight.classList.remove('active');
+        themeIconDark.classList.add('active');
     }
 }
 
