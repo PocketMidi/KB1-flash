@@ -9,11 +9,15 @@ import { SerialMonitor } from './serial-monitor';
 import './style.css';
 import type { FirmwareFile, FirmwareRelease, FlashStatus } from './types';
 
+// Connection state
+type ConnectionState = 'disconnected' | 'connecting' | 'connected';
+
 // Initialize
 let flasher: KB1Flasher | null = null;
 let serialMonitor: SerialMonitor | null = null;
 let currentFirmware: FirmwareFile | null = null;
 let latestVersion: string = 'v1.6.0'; // Default until loaded from GitHub
+let connectionState: ConnectionState = 'disconnected';
 
 // DOM elements - Top Bar
 const browserWarning = document.getElementById('browser-warning')!;
@@ -52,7 +56,6 @@ const progressMessage = document.getElementById('progress-message')!;
 const errorMessage = document.getElementById('error-message')!;
 const resetBtn = document.getElementById('reset-btn')!;
 const retryBtn = document.getElementById('retry-btn')!;
-const flashSuccessBadge = document.getElementById('flash-success-badge')!;
 
 // Device Info section
 const deviceName = document.getElementById('device-name')!;
@@ -217,13 +220,20 @@ function setupConnectionButtons(): void {
 
     btnConnect.addEventListener('click', async () => {
         try {
+            connectionState = 'connecting';
             setConnecting(true);
+            updateFlashButtonStates();
 
             // Create flasher if not exists
             if (!flasher) {
                 flasher = new KB1Flasher();
                 flasher.onStatus((status: FlashStatus) => {
                     updateFlashUI(status);
+                });
+
+                // Set up auto-disconnect detection (fires when USB is unplugged)
+                flasher.onDisconnect(() => {
+                    handleAutoDisconnect();
                 });
             }
 
@@ -237,10 +247,11 @@ function setupConnectionButtons(): void {
             await loadDeviceInfo();
 
             // Reset device to boot into firmware mode (so serial monitor works)
-            console.log('Resetting device to firmware mode...');
             await flasher.resetToFirmware();
 
+            connectionState = 'connected';
             setConnecting(false);
+            updateFlashButtonStates();
 
             // Update UI
             btnConnect.classList.add('hidden');
@@ -251,7 +262,9 @@ function setupConnectionButtons(): void {
             connectionStatus.classList.add('connected');
             statusMessage.textContent = 'Connected';
         } catch (error) {
+            connectionState = 'disconnected';
             setConnecting(false);
+            updateFlashButtonStates();
             console.error('Connection failed:', error);
             const message = error instanceof Error ? error.message : 'Failed to connect to device';
             alert(message);
@@ -259,8 +272,19 @@ function setupConnectionButtons(): void {
     });
 
     btnDisconnect.addEventListener('click', async () => {
-        // Reset flasher (it will auto-disconnect when garbage collected)
+        // Cleanup USB port properly (recovery mechanism)
+        if (flasher) {
+            try {
+                await flasher.cleanup();
+            } catch (error) {
+                console.warn('Error during cleanup:', error);
+            }
+        }
+
+        // Reset flasher
         flasher = null;
+        connectionState = 'disconnected';
+        updateFlashButtonStates();
 
         // Update UI
         btnDisconnect.classList.add('hidden');
@@ -277,6 +301,85 @@ function setupConnectionButtons(): void {
         // Reset flash UI
         resetFlash();
     });
+}
+
+/**
+ * Handle automatic disconnection (when USB is unplugged)
+ */
+function handleAutoDisconnect(): void {
+    // Reset flasher
+    flasher = null;
+    connectionState = 'disconnected';
+    updateFlashButtonStates();
+
+    // Update UI
+    btnDisconnect.classList.add('hidden');
+    btnConnect.classList.remove('hidden');
+
+    // Update connection status
+    connectionStatus.classList.remove('connected');
+    connectionStatus.classList.add('disconnected');
+    statusMessage.textContent = 'Not Connected';
+
+    // Clear device info
+    clearDeviceInfo();
+
+    // Reset flash UI
+    resetFlash();
+
+    // Show toast notification
+    showToast('Device disconnected - USB unplugged', 'info');
+}
+
+/**
+ * Update flash button states based on connection status
+ */
+function updateFlashButtonStates(): void {
+    const isConnected = connectionState === 'connected';
+    const isConnecting = connectionState === 'connecting';
+    const hasGitHubSelection = !!(window as any).selectedRelease;
+    const hasLocalFile = flashLocalBtn.style.display === 'block';
+
+    // Determine disabled states and reasons
+    const githubDisabled = !isConnected || isConnecting || !hasGitHubSelection;
+    const localDisabled = !isConnected || isConnecting || !hasLocalFile;
+
+    // Store disable reasons
+    let githubReason = '';
+    let localReason = '';
+
+    if (!isConnected && !isConnecting) {
+        githubReason = 'Please connect your KB1 device first';
+        localReason = 'Please connect your KB1 device first';
+    } else if (isConnecting) {
+        githubReason = 'Connecting to device... Please wait';
+        localReason = 'Connecting to device... Please wait';
+    } else if (!hasGitHubSelection) {
+        githubReason = 'Please select a firmware version from the list';
+    } else if (!hasLocalFile) {
+        localReason = 'Please upload a firmware file first';
+    }
+
+    // Use CSS class instead of disabled attribute (so clicks still work)
+    if (githubDisabled) {
+        flashGitHubBtn.classList.add('btn-disabled');
+        flashGitHubBtn.setAttribute('data-disabled-reason', githubReason);
+    } else {
+        flashGitHubBtn.classList.remove('btn-disabled');
+        flashGitHubBtn.removeAttribute('data-disabled-reason');
+    }
+
+    if (localDisabled) {
+        flashLocalBtn.classList.add('btn-disabled');
+        flashLocalBtn.setAttribute('data-disabled-reason', localReason);
+    } else {
+        flashLocalBtn.classList.remove('btn-disabled');
+        flashLocalBtn.removeAttribute('data-disabled-reason');
+    }
+
+    // Update button tooltips for hover
+    flashGitHubBtn.title = githubReason;
+    flashLocalBtn.title = localReason;
 }
 
 /**
@@ -300,8 +403,28 @@ async function loadDeviceInfo(): Promise<void> {
             await flasher.readNVS();
             await loadNVSData();
         } catch (error) {
-            console.warn('Could not read NVS data on initial connect:', error);
-            console.log('NVS data will be available during flash process');
+            // Check if this is a timeout error (indicates virgin/unformatted device)
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const isTimeout = errorMessage.toLowerCase().includes('timeout');
+
+            if (isTimeout) {
+                // Virgin device detected: bootloader works but NVS is unformatted
+                // This is NORMAL for new/factory devices - NOT a brick!
+                console.warn('NVS partition unformatted (virgin device detected)');
+                showToast('New or unformatted device detected - ready to flash firmware', 'info');
+
+                // Clear NVS display to show it's empty
+                nvsBatPct.textContent = 'N/A';
+                nvsBatBleOnMs.textContent = 'N/A';
+                nvsBatBleOffMs.textContent = 'N/A';
+                nvsBatDischMs.textContent = 'N/A';
+                nvsBatCalTime.textContent = 'N/A';
+                nvsIsCharging.textContent = 'N/A';
+                nvsUsbBoot.textContent = 'N/A';
+            } else {
+                // Other error - could be communication issue
+                console.warn('Could not read NVS data:', error);
+            }
         }
     } catch (error) {
         console.error('Failed to load device info:', error);
@@ -345,13 +468,9 @@ async function loadNVSData(): Promise<void> {
             return;
         }
 
-        console.log(`Loading NVS data: ${nvsData.length} bytes`);
-
         // Parse NVS data
         const { parseNVSBatteryData } = await import('./nvs-parser');
         const batteryData = parseNVSBatteryData(nvsData);
-
-        console.log('Battery data parsed:', batteryData);
 
         // Update UI with parsed values
         nvsBatPct.textContent = batteryData.percentage !== null ? `${batteryData.percentage}%` : 'N/A';
@@ -427,7 +546,16 @@ function setupFileUpload(): void {
  */
 function setupGitHubFirmwareSelection(): void {
     // Flash selected version
-    flashGitHubBtn.addEventListener('click', async () => {
+    flashGitHubBtn.addEventListener('click', async (e) => {
+        // Check if button is disabled (via CSS class)
+        const disabledReason = flashGitHubBtn.getAttribute('data-disabled-reason');
+
+        if (disabledReason) {
+            e.preventDefault();
+            showToast(disabledReason, 'info');
+            return;
+        }
+
         const selectedRelease = (window as any).selectedRelease;
         if (!selectedRelease) {
             console.error('No release selected');
@@ -453,12 +581,11 @@ async function loadLocalFirmware(file: File): Promise<void> {
             source: 'local',
         };
 
-        console.log(`Loaded local firmware: ${file.name} (${arrayBuffer.byteLength} bytes)`);
         fileName.textContent = `${file.name} (${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} MB) - Ready to flash`;
 
         // Show flash button
         flashLocalBtn.style.display = 'block';
-        flashLocalBtn.disabled = false;
+        updateFlashButtonStates(); // Respect connection state
     } catch (error) {
         console.error('Failed to load firmware file:', error);
         fileName.textContent = 'Drop .bin file or click to browse';
@@ -471,7 +598,16 @@ async function loadLocalFirmware(file: File): Promise<void> {
  * Setup local firmware flash button
  */
 function setupLocalFirmwareFlash(): void {
-    flashLocalBtn.addEventListener('click', async () => {
+    flashLocalBtn.addEventListener('click', async (e) => {
+        // Check if button is disabled (via CSS class)
+        const disabledReason = flashLocalBtn.getAttribute('data-disabled-reason');
+
+        if (disabledReason) {
+            e.preventDefault();
+            showToast(disabledReason, 'info');
+            return;
+        }
+
         if (!currentFirmware || currentFirmware.source !== 'local') {
             showError('No firmware file loaded');
             return;
@@ -486,15 +622,12 @@ function setupLocalFirmwareFlash(): void {
  */
 async function loadGitHubReleases(): Promise<void> {
     try {
-        console.log('Fetching releases from GitHub...');
-
         // Show spinner while loading
         releasesLoading.style.display = 'flex';
         releasesList.style.display = 'none';
         flashGitHubBtn.style.display = 'none';
 
         const releases = await fetchReleases();
-        console.log(`Fetched ${releases.length} releases`);
 
         if (releases.length === 0) {
             releasesLoading.innerHTML = '<p class="note">No releases found</p>';
@@ -560,11 +693,11 @@ function selectRelease(element: HTMLElement, index: number, releases: any[]): vo
     // Mark as selected
     element.classList.add('selected');
 
-    // Enable flash button
-    flashGitHubBtn.disabled = false;
-
     // Store selected release
     (window as any).selectedRelease = releases[index];
+
+    // Update flash button state (respects connection state)
+    updateFlashButtonStates();
 }
 
 /**
@@ -615,27 +748,22 @@ async function startFlash(): Promise<void> {
         return;
     }
 
+    // Prevent flash if not connected
+    if (connectionState !== 'connected') {
+        showError('Please connect to KB1 before flashing firmware');
+        return;
+    }
+
+    // Prevent flash if already flashing
+    if (!flasher) {
+        showError('Connection lost. Please reconnect to KB1.');
+        return;
+    }
+
     const clearDataToggle = document.getElementById('clear-data-toggle') as HTMLInputElement;
     const clearData = clearDataToggle?.checked ?? false;
 
     try {
-        // Create flasher if not exists
-        if (!flasher) {
-            flasher = new KB1Flasher();
-
-            // Setup status callback
-            flasher.onStatus((status: FlashStatus) => {
-                updateFlashUI(status);
-            });
-
-            // Request USB port
-            await flasher.requestPort();
-
-            // Update connection UI
-            btnConnect.classList.add('hidden');
-            btnDisconnect.classList.remove('hidden');
-        }
-
         // Reset status cards
         flashComplete.classList.add('hidden');
         flashError.classList.add('hidden');
@@ -812,8 +940,8 @@ function showComplete(): void {
         }
     });
 
-    // Show success badge in header
-    flashSuccessBadge.classList.remove('hidden');
+    // Show success toast notification
+    showToast('Firmware update complete! Device is ready to use.', 'success');
 
     // Show success card
     flashComplete.classList.remove('hidden');
@@ -837,8 +965,19 @@ function showError(message: string): void {
 function showToast(message: string, type: 'error' | 'success' | 'info' = 'info'): void {
     const toast = document.getElementById('toast')!;
     const toastMsg = document.getElementById('toast-message')!;
+
     toastMsg.textContent = message;
     toast.className = `toast toast-${type} visible`;
+
+    // Force centering with setProperty using important priority to override CSS !important
+    toast.style.setProperty('position', 'fixed', 'important');
+    toast.style.setProperty('top', '80px', 'important');
+    toast.style.setProperty('left', '50%', 'important');
+    toast.style.setProperty('right', 'auto', 'important');
+    toast.style.setProperty('transform', 'translateX(-10%)', 'important');
+    toast.style.setProperty('margin', '0', 'important');
+    toast.style.setProperty('z-index', '10000', 'important');
+
     clearTimeout((toast as any)._hideTimer);
     (toast as any)._hideTimer = setTimeout(() => {
         toast.classList.remove('visible');
@@ -848,21 +987,32 @@ function showToast(message: string, type: 'error' | 'success' | 'info' = 'info')
 /**
  * Reset flash UI
  */
-function resetFlash(): void {
+async function resetFlash(): Promise<void> {
+    // Cleanup USB port if flasher exists (recovery mechanism)
+    if (flasher) {
+        try {
+            await flasher.cleanup();
+            console.log('USB port cleaned up during reset');
+        } catch (error) {
+            console.warn('Error during cleanup:', error);
+        }
+    }
+
     flashComplete.classList.add('hidden');
     flashError.classList.add('hidden');
-    flashSuccessBadge.classList.add('hidden');
 
     currentFirmware = null;
 
     fileName.textContent = 'Drop .bin file or click to browse';
     fileInput.value = '';
     flashLocalBtn.style.display = 'none';
-    flashLocalBtn.disabled = true;
 
     // Reset GitHub selection
-    flashGitHubBtn.disabled = true;
+    (window as any).selectedRelease = null;
     document.querySelectorAll<HTMLElement>('.release-list-item').forEach(el => el.classList.remove('selected'));
+
+    // Update button states
+    updateFlashButtonStates();
 
     // Reset progress UI to idle state
     progressFill.style.width = '0%';

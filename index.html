@@ -163,9 +163,6 @@
                             <h2>Firmware Update</h2>
                             <button class="help-btn" data-modal="flash" title="How to use">i</button>
                         </div>
-                        <div id="flash-success-badge" class="success-badge hidden">
-                            <span>✓</span> Update Complete!
-                        </div>
                         <div id="connection-status" class="inline-status disconnected">
                             <div class="status-indicator"></div>
                             <span id="status-message">Not Connected</span>
@@ -231,8 +228,9 @@
                                 <div id="releases-list" class="releases-scroll-container" style="display: none;">
                                     <!-- Populated dynamically -->
                                 </div>
-                                <button id="flash-github-btn" class="btn btn-primary"
-                                    style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                <button id="flash-github-btn" class="btn btn-primary btn-disabled"
+                                    style="margin-top: 8px; width: 100%; display: none;"
+                                    data-disabled-reason="Please connect your KB1 device first">
                                     Flash Selected Version
                                 </button>
 
@@ -261,8 +259,9 @@
                                         <span id="file-name">Drop .bin file or click to browse</span>
                                     </label>
                                 </div>
-                                <button id="flash-local-btn" class="btn btn-primary"
-                                    style="margin-top: 8px; width: 100%; display: none;" disabled>
+                                <button id="flash-local-btn" class="btn btn-primary btn-disabled"
+                                    style="margin-top: 8px; width: 100%; display: none;"
+                                    data-disabled-reason="Please connect your KB1 device first">
                                     Flash Custom Firmware
                                 </button>
                             </div>

@@ -25,6 +25,9 @@ export class KB1Flasher {
     private loader: ESPLoader | null = null;
     private nvsBackup: Uint8Array | null = null;
     private statusCallback: ((status: FlashStatus) => void) | null = null;
+    private disconnectCallback: (() => void) | null = null;
+    private disconnectHandler: (() => void) | null = null;
+    private disconnectListenerActive: boolean = false;
 
     /**
      * Check if Web Serial API is supported
@@ -38,6 +41,34 @@ export class KB1Flasher {
      */
     onStatus(callback: (status: FlashStatus) => void): void {
         this.statusCallback = callback;
+    }
+
+    /**
+     * Set disconnect callback for when device is unplugged
+     */
+    onDisconnect(callback: () => void): void {
+        this.disconnectCallback = callback;
+    }
+
+    /**
+     * Set up disconnect listener on the serial port
+     */
+    private setupDisconnectListener(): void {
+        if (!this.port) return;
+        if (this.disconnectListenerActive) return; // Already set up
+
+        // Create bound handler so we can remove it later if needed
+        this.disconnectHandler = () => {
+            console.log('Device disconnected (USB unplugged)');
+            this.disconnectListenerActive = false; // Reset flag
+            if (this.disconnectCallback) {
+                this.disconnectCallback();
+            }
+        };
+
+        // Listen for disconnect event (fires when USB is unplugged)
+        this.port.addEventListener('disconnect', this.disconnectHandler);
+        this.disconnectListenerActive = true;
     }
 
     /**
@@ -69,6 +100,9 @@ export class KB1Flasher {
             }
 
             console.log('USB port selected');
+
+            // Set up disconnect listener to detect when USB is unplugged
+            this.setupDisconnectListener();
         } catch (error) {
             console.error('Failed to select USB port:', error);
             throw new Error('Failed to select USB port. Make sure KB1 is connected.');
@@ -86,8 +120,8 @@ export class KB1Flasher {
 
             console.log('Creating transport and loader...');
 
-            // Create transport (will open port automatically)
-            this.transport = new Transport(this.port, true);
+            // Create transport (disable verbose logging for better performance)
+            this.transport = new Transport(this.port, false);
             this.loader = new ESPLoader({
                 transport: this.transport,
                 baudrate: BAUDRATE,
@@ -98,6 +132,9 @@ export class KB1Flasher {
             await this.loader.main();
 
             console.log('Connected to ESP32 bootloader');
+
+            // Set up disconnect listener after port is opened by transport
+            this.setupDisconnectListener();
 
             // Wait a bit for stub to stabilize
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -121,8 +158,8 @@ export class KB1Flasher {
 
             console.log('Creating transport and loader...');
 
-            // Create transport (will open port automatically)
-            this.transport = new Transport(this.port, true);
+            // Create transport (disable verbose logging for better performance)
+            this.transport = new Transport(this.port, false);
             this.loader = new ESPLoader({
                 transport: this.transport,
                 baudrate: BAUDRATE,
@@ -133,6 +170,10 @@ export class KB1Flasher {
             await this.loader.main();
 
             console.log('Connected to ESP32 bootloader');
+
+            // Set up disconnect listener after port is opened
+            this.setupDisconnectListener();
+
             this.updateStatus('checking-usb', 5, 'Connected to KB1');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
@@ -145,16 +186,9 @@ export class KB1Flasher {
      * Read NVS data without status updates (for initial device info)
      */
     async readNVS(): Promise<void> {
-        console.log('readNVS() called, checking loader state...');
-        console.log('this.loader:', this.loader);
-        console.log('this.transport:', this.transport);
-        console.log('this.port:', this.port);
-
         if (!this.loader) {
             throw new Error('Not connected to device');
         }
-
-        console.log('Reading NVS partition from device...');
 
         try {
             // Read with progress callback to prevent timeout
@@ -169,24 +203,31 @@ export class KB1Flasher {
                         NVS_SIZE,
                         (_packet: Uint8Array, progress: number, _totalSize: number) => {
                             // Silent progress callback to keep connection alive
-                            if (progress % 0.25 === 0 || progress === 1) {
+                            // Only log at 25% intervals to reduce console spam
+                            if (progress === 0.25 || progress === 0.5 || progress === 0.75 || progress === 1) {
                                 console.log(`Reading NVS: ${Math.floor(progress * 100)}%`);
                             }
                         }
                     );
-                    console.log(`NVS read successfully: ${this.nvsBackup.length} bytes from offset ${NVS_OFFSET.toString(16)}`);
+                    console.log(`NVS read complete: ${this.nvsBackup.length} bytes`);
                     return; // Success!
                 } catch (error) {
                     lastError = error instanceof Error ? error : new Error('Unknown error');
+                    const isTimeout = lastError.message.toLowerCase().includes('timeout');
                     retries--;
                     if (retries > 0) {
-                        console.warn(`NVS read failed, retrying... (${retries} attempts left)`);
+                        const reason = isTimeout ? 'timeout (may be unformatted)' : 'error';
+                        console.warn(`NVS read failed (${reason}), retrying... (${retries} attempts left)`);
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             }
 
-            // All retries failed
+            // All retries failed - provide context about what this might mean
+            const isTimeout = lastError?.message.toLowerCase().includes('timeout');
+            if (isTimeout) {
+                throw new Error('Timeout reading NVS partition (device may be unformatted or new)');
+            }
             throw lastError || new Error('Failed to read NVS after multiple attempts');
         } catch (error) {
             console.error('Failed to read NVS:', error);
@@ -352,6 +393,13 @@ export class KB1Flasher {
                 await this.loader.hardReset();
             }
 
+            // Remove disconnect listener before closing port
+            if (this.port && this.disconnectHandler) {
+                this.port.removeEventListener('disconnect', this.disconnectHandler);
+                this.disconnectListenerActive = false;
+                this.disconnectHandler = null;
+            }
+
             if (this.port) {
                 await this.port.close();
             }
@@ -456,9 +504,10 @@ export class KB1Flasher {
     }
 
     /**
-     * Cleanup
+     * Cleanup and release USB port (public for error recovery)
      */
     async cleanup(): Promise<void> {
+        console.log('Cleaning up flasher...');
         await this.disconnect();
     }
 }
