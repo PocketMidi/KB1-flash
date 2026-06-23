@@ -1,5 +1,16 @@
 # KB1 Flash Tool
 
+This repository now serves a redirect-only GitHub Pages site.
+
+- Old URL: https://pocketmidi.github.io/KB1-flash/
+- New URL: https://pocketmidi.github.io/KB1-studio/
+
+The root page and 404 page both forward to KB1 Studio.
+
+---
+
+Legacy app description (historical):
+
 Desktop firmware updater for KB1 MIDI controller. Flash firmware via USB with automatic battery calibration preservation.
 
 ## Features
