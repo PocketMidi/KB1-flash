@@ -655,7 +655,7 @@ body {
     color: var(--text-secondary);
     margin: var(--spacing-sm) 0;
     position: relative;
-    font-size: 0.85rem !important;
+    font-size: .85rem !important;
 }
 
 .divider::before,

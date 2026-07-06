@@ -1,5 +1,14 @@
 # KB1 Flash Tool
 
+## Deprecated
+
+KB1 Flash is retired. Firmware update functionality now lives in KB1 Studio.
+
+- Active app: https://pocketmidi.github.io/KB1-studio/
+- Legacy URL (redirects): https://pocketmidi.github.io/KB1-flash/
+
+This repository should remain redirect-only and read-only (archive on GitHub).
+
 This repository now serves a redirect-only GitHub Pages site.
 
 - Old URL: https://pocketmidi.github.io/KB1-flash/
